@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">pos3</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="title_activity_cashier">CashierActivity</string>
+    <string name="title_activity_users">UsersActivity</string>
+    <string name="title_activity_test">TestActivity</string>
+    <string name="title_activity_supplier">SupplierActivity</string>
+    <string name="title_activity_products">ProductsActivity</string>
+</resources>
