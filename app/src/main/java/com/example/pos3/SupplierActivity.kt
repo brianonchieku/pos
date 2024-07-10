@@ -210,6 +210,7 @@ fun AddSupplierDialog(onDismiss: () -> Unit, onAddSupplier: (Supplier) -> Unit) 
     }
 }
 
+
 suspend fun addSupplierToFirestore(supplier: Supplier, context: Context) {
     val db = FirebaseFirestore.getInstance()
 

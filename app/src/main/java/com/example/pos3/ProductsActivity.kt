@@ -1,12 +1,15 @@
 package com.example.pos3
 
+import android.app.DatePickerDialog
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.widget.DatePicker
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,13 +18,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +58,8 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 
 class ProductsActivity : ComponentActivity() {
@@ -164,7 +174,7 @@ suspend fun fetchProductsFromFirestore(): List<Product> {
                 price = document.getDouble("Price") ?: 0.0,
                 create = document.getTimestamp("Create"),
                 update = document.getTimestamp("Update"),
-                expiryDate = document.getString("ExpiryDate") ?: "",
+                expiryDate = document.getString("ExpiryDate")?: "",
                 quantity = document.getLong("Quantity")?.toInt() ?: 0
             )
         })
@@ -184,9 +194,39 @@ fun AddProductDialog(onDismiss: () -> Unit, onAddProduct: (Product) -> Unit) {
     var quantity by remember { mutableStateOf("") }
     var expiryDate by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val categories = remember { mutableStateOf<List<String>>(emptyList()) }
+    val scope = rememberCoroutineScope()
+    var expanded by remember { mutableStateOf(false) }
+    var selectedCategory by remember { mutableStateOf("") }
+    val icon = if (expanded){
+        Icons.Filled.KeyboardArrowUp
+    }else{
+        Icons.Filled.KeyboardArrowDown
+    }
 
+    LaunchedEffect(Unit) {
+        scope.launch {
+            categories.value = fetchCategoriesFromFirestore()
+        }
+    }
 
+    val year: Int
+    val month: Int
+    val day: Int
 
+    val calendar = Calendar.getInstance()
+    year = calendar.get(Calendar.YEAR)
+    month = calendar.get(Calendar.MONTH)
+    day = calendar.get(Calendar.DAY_OF_MONTH)
+    calendar.time = Date()
+
+    val date = remember { mutableStateOf("") }
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+            date.value = "$dayOfMonth/$month/$year"
+        }, year, month, day
+    )
 
     Dialog(onDismissRequest = { onDismiss() }) {
         Card(
@@ -198,11 +238,39 @@ fun AddProductDialog(onDismiss: () -> Unit, onAddProduct: (Product) -> Unit) {
             ) {
                 Text(text = "Add New Product", fontWeight = FontWeight.Bold)
                 TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
-                TextField(value = category, onValueChange = { category = it }, label = { Text("Category") })
+                Box(modifier = Modifier.wrapContentSize(), contentAlignment = Alignment.Center) {
+                    TextField(value =selectedCategory ,
+                        modifier = Modifier.clickable { expanded=!expanded },
+                        onValueChange = {selectedCategory=it},
+                        label = { Text(text = "Category")},
+                        trailingIcon = {
+                            Icon(icon, "", modifier = Modifier.clickable { expanded=!expanded } )
+                        }, readOnly = true
+                    )
+                    DropdownMenu(expanded = expanded,
+                        onDismissRequest = { expanded=false}
+                    ) {
+                        categories.value.forEach { cat ->
+                            DropdownMenuItem(text = {Text(text = cat) }, onClick = {
+                                selectedCategory=cat
+                                expanded=false
+                            })
+                        }
+
+                    }
+
+                }
                 TextField(value = barcode, onValueChange = { barcode = it }, label = { Text("Barcode") })
                 TextField(value = price, onValueChange = { price = it }, label = { Text("Price") })
                 TextField(value = quantity, onValueChange = { quantity = it }, label = { Text("Quantity") })
-                TextField(value = expiryDate, onValueChange = { expiryDate = it }, label = { Text("Expiry Date") })
+                TextField(value = date.value, onValueChange = { date.value = it }, label = { Text("Expiry Date") },
+                    readOnly = true,
+                    trailingIcon = {
+                        Icon(icon, "", modifier = Modifier.clickable {  datePickerDialog.show() } )
+                    }
+                )
+
+
 
                 Row(
                     horizontalArrangement = Arrangement.End,
@@ -212,10 +280,11 @@ fun AddProductDialog(onDismiss: () -> Unit, onAddProduct: (Product) -> Unit) {
                         Text("Cancel")
                     }
                     TextButton(onClick = {
-                        if (name.isEmpty() || category.isEmpty() || barcode.isEmpty() || price.isEmpty()|| quantity.isEmpty() || expiryDate.isEmpty()) {
+                        if (name.isEmpty() || selectedCategory.isEmpty() || barcode.isEmpty() || price.isEmpty()|| quantity.isEmpty() || date.value.isEmpty()) {
                             Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                         }else{
-                            val newProduct = Product(name, category, barcode, price.toDouble(),null, null,  expiryDate, quantity.toInt())
+
+                            val newProduct = Product(name, selectedCategory, barcode, price.toDouble(),null, null,  date.value, quantity.toInt())
                             onAddProduct(newProduct)
                         }
 
@@ -227,6 +296,25 @@ fun AddProductDialog(onDismiss: () -> Unit, onAddProduct: (Product) -> Unit) {
         }
     }
 }
+
+
+
+suspend fun fetchCategoriesFromFirestore(): List<String> {
+    val db = FirebaseFirestore.getInstance()
+    val categories = mutableListOf<String>()
+
+    try {
+        val snapshot = db.collection("Categories").get().await()
+        categories.addAll(snapshot.documents.map { document ->
+            document.getString("category name") ?: ""
+        })
+    } catch (e: FirebaseFirestoreException) {
+        Log.d("Firestore", "Error fetching data from Firestore: ${e.message}")
+    }
+
+    return categories
+}
+
 
 suspend fun addProductToFirestore(product: Product, context: Context) {
     val db = FirebaseFirestore.getInstance()
