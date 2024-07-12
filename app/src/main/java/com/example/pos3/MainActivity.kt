@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -64,6 +66,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -198,115 +201,50 @@ fun Admin() {
             Box(modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)){
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                    Text(text = "Welcome ${userName.value} ", fontSize = 20.sp)
-                    Button(onClick = {
-                        val intent= Intent(context, TableTest::class.java)
-                        context.startActivity(intent)
-                    }) {
-                        Text(text = "table")
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
+                    val cardsData = listOf(
+                        "Today's Sales" to "ksh 0.00",
+                        "Expired Products" to "0",
+                        "Products" to "0",
+                        "Suppliers" to "0",
+                        "Users" to "0",
+                        "Week's Sales" to "0",
+                        "Month's Sales" to "0",
+                        "Year's Sales" to "0",
+                        "Stores" to "0"
+                    )
+                    Spacer(modifier = Modifier.size(20.dp))
 
+                    Text(text = "Welcome, ${userName.value} ", fontSize = 20.sp)
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        verticalArrangement = Arrangement.spacedBy(70.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 66.dp, start = 10.dp, end = 10.dp)
+                    ) {
+                        items(cardsData.size) { index ->
+                            val (title, value) = cardsData[index]
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f)
+                                    .padding(8.dp),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(text = title, fontWeight = FontWeight.Bold)
+                                    Text(text = value)
+                                }
+                            }
+                        }
                     }
-                    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center) {
-                        Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
-                            Card(modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
-                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center)  {
-                                    Text(text = "Today's Sales")
-                                    Text(text = "ksh 0.00")
-                                }
-                            }
-                            Card(modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
-                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center)  {
-                                    Text(text = "Expired Products")
-                                    Text(text = "0")
-                                }
 
-                            }
-                            Card(modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
-                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center)  {
-                                    Text(text = "Products")
-                                    Text(text = "0")
-                                }
-
-                            }
-
-                        }
-                        Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
-                            Card(modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
-                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center)  {
-                                    Text(text = "Today's Sales")
-                                    Text(text = "ksh 0.00")
-                                }
-                            }
-                            Card(modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
-                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center)  {
-                                    Text(text = "Expired Products")
-                                    Text(text = "0")
-                                }
-
-                            }
-                            Card(modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
-                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center)  {
-                                    Text(text = "Products")
-                                    Text(text = "0")
-                                }
-
-                            }
-
-                        }
-                        Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
-                            Card(modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
-                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center)  {
-                                    Text(text = "Today's Sales")
-                                    Text(text = "ksh 0.00")
-                                }
-                            }
-                            Card(modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
-                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center)  {
-                                    Text(text = "Expired Products")
-                                    Text(text = "0")
-                                }
-
-                            }
-                            Card(modifier = Modifier
-                                .fillMaxSize()
-                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
-                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center)  {
-                                    Text(text = "Products")
-                                    Text(text = "0")
-                                }
-
-                            }
-
-                        }
-
-                    }
                 }
             }
         }
