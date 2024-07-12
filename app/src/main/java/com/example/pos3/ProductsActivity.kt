@@ -52,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.breens.beetablescompose.BeeTablesCompose
 import com.example.pos3.ui.theme.Pos3Theme
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -115,7 +116,7 @@ fun Products() {
                         }
                     }
                 }
-                ProductsList(products = products.value)
+                ProductsTable(products = products.value)
 
             }
         }
@@ -123,41 +124,31 @@ fun Products() {
 }
 
 @Composable
-fun ProductsList(products: List<Product>) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(18.dp),
-        verticalArrangement = Arrangement.spacedBy(1.dp)
-    ) {
-        items(products) { product ->
-            ProductDetails(product = product)
-        }
-    }
-
-}
-
-@Composable
-fun ProductDetails(product: Product) {
+fun ProductsTable(products: List<Product>) {
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
-    val createdDate = product.create?.toDate()?.let { dateFormat.format(it) } ?: "N/A"
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(text = "Name: ${product.name}")
-            Text(text = "Category: ${product.category}")
-            Text(text = "Price: ${product.price}")
-            Text(text = "Quantity: ${product.quantity}")
-            Text(text = "Expiry Date: ${product.expiryDate}")
-            Text(text = "Created on: $createdDate")
+    val productList = products.map { product ->
+        listOf(
+            product.name,
+            product.category,
+            product.price.toString(),
+            product.quantity.toString(),
+            product.expiryDate,
+            product.create?.toDate()?.let { dateFormat.format(it) } ?: "N/A"
+        )
+    }
+
+    val tableHeaders = listOf("Name", "Category", "Price", "Quantity", "Expiry Date", "Created on")
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+            BeeTablesCompose(data = productList, headerTableTitles = tableHeaders)
         }
     }
 }
+
+
+
+
 
 
 suspend fun fetchProductsFromFirestore(): List<Product> {
@@ -167,6 +158,7 @@ suspend fun fetchProductsFromFirestore(): List<Product> {
     try {
         val snapshot = db.collection("Products").get().await()
         products.addAll(snapshot.documents.map { document ->
+            Log.d("Firestore", "Document data: ${document.data}")
             Product(
                 name = document.getString("Name") ?: "",
                 category = document.getString("Category") ?: "",

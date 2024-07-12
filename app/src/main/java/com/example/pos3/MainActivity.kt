@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Call
@@ -34,6 +36,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -197,6 +200,113 @@ fun Admin() {
                 .padding(paddingValues)){
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Text(text = "Welcome ${userName.value} ", fontSize = 20.sp)
+                    Button(onClick = {
+                        val intent= Intent(context, TableTest::class.java)
+                        context.startActivity(intent)
+                    }) {
+                        Text(text = "table")
+
+                    }
+                    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center) {
+                        Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
+                            Card(modifier = Modifier
+                                .fillMaxSize()
+                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
+                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center)  {
+                                    Text(text = "Today's Sales")
+                                    Text(text = "ksh 0.00")
+                                }
+                            }
+                            Card(modifier = Modifier
+                                .fillMaxSize()
+                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
+                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center)  {
+                                    Text(text = "Expired Products")
+                                    Text(text = "0")
+                                }
+
+                            }
+                            Card(modifier = Modifier
+                                .fillMaxSize()
+                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
+                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center)  {
+                                    Text(text = "Products")
+                                    Text(text = "0")
+                                }
+
+                            }
+
+                        }
+                        Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
+                            Card(modifier = Modifier
+                                .fillMaxSize()
+                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
+                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center)  {
+                                    Text(text = "Today's Sales")
+                                    Text(text = "ksh 0.00")
+                                }
+                            }
+                            Card(modifier = Modifier
+                                .fillMaxSize()
+                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
+                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center)  {
+                                    Text(text = "Expired Products")
+                                    Text(text = "0")
+                                }
+
+                            }
+                            Card(modifier = Modifier
+                                .fillMaxSize()
+                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
+                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center)  {
+                                    Text(text = "Products")
+                                    Text(text = "0")
+                                }
+
+                            }
+
+                        }
+                        Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
+                            Card(modifier = Modifier
+                                .fillMaxSize()
+                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
+                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center)  {
+                                    Text(text = "Today's Sales")
+                                    Text(text = "ksh 0.00")
+                                }
+                            }
+                            Card(modifier = Modifier
+                                .fillMaxSize()
+                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
+                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center)  {
+                                    Text(text = "Expired Products")
+                                    Text(text = "0")
+                                }
+
+                            }
+                            Card(modifier = Modifier
+                                .fillMaxSize()
+                                .padding(20.dp), shape = RoundedCornerShape(10.dp)) {
+                                Column(modifier = Modifier.wrapContentSize(), horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center)  {
+                                    Text(text = "Products")
+                                    Text(text = "0")
+                                }
+
+                            }
+
+                        }
+
+                    }
                 }
             }
         }

@@ -6,4 +6,5 @@
     <string name="title_activity_test">TestActivity</string>
     <string name="title_activity_supplier">SupplierActivity</string>
     <string name="title_activity_products">ProductsActivity</string>
+    <string name="title_activity_table_test">TableTest</string>
 </resources>
