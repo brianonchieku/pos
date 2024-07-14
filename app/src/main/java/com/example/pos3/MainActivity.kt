@@ -206,7 +206,7 @@ fun Admin() {
                     .background(
                         color = colorResource(id = R.color.purple_200),
                         shape = RoundedCornerShape(bottomEnd = 40.dp, bottomStart = 40.dp)
-                    )){
+                    ), contentAlignment = Alignment.Center){
                     Text(text = "Welcome, ${userName.value} ", fontSize = 20.sp)
 
                 }

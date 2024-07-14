@@ -140,11 +140,21 @@ fun ProductsTable(products: List<Product>) {
     }
 
     val tableHeaders = listOf("Name", "Category", "Price", "Quantity", "Expiry Date", "Created on")
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-            BeeTablesCompose(data = productList, headerTableTitles = tableHeaders)
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row {
+            tableHeaders.forEach { header ->
+                Text(text = header, modifier = Modifier.weight(1f).padding(8.dp))
+            }
+        }
+        productList.forEach { row ->
+            Row {
+                row.forEach { cell ->
+                    Text(text = cell, modifier = Modifier.weight(1f).padding(8.dp))
+                }
+            }
         }
     }
+
 }
 
 
