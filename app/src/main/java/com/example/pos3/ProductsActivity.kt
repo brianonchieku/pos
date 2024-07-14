@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.Keep
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -336,7 +337,7 @@ suspend fun addProductToFirestore(product: Product, context: Context) {
         }
 }
 
-
+@Keep
 data class Product(
     val name: String,
     val category: String,
