@@ -16,9 +16,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -29,6 +33,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +53,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -117,6 +123,7 @@ fun Products() {
                         }
                     }
                 }
+                Spacer(modifier = Modifier.size(20.dp))
                 ProductsTable(products = products.value)
 
             }
@@ -140,18 +147,31 @@ fun ProductsTable(products: List<Product>) {
     }
 
     val tableHeaders = listOf("Name", "Category", "Price", "Quantity", "Expiry Date", "Created on")
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row {
-            tableHeaders.forEach { header ->
-                Text(text = header, modifier = Modifier.weight(1f).padding(8.dp))
-            }
-        }
-        productList.forEach { row ->
-            Row {
-                row.forEach { cell ->
-                    Text(text = cell, modifier = Modifier.weight(1f).padding(8.dp))
+            tableHeaders.forEachIndexed { index,header ->
+                Text(text = header, modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp), fontWeight = FontWeight.Bold)
+                if(index < tableHeaders.size-1){
+                    Spacer(modifier = Modifier.width(1.dp))
                 }
             }
+        }
+        Divider(color = Color.Black, thickness = 1.dp)
+
+        productList.forEach { row ->
+            Row(modifier = Modifier.padding(vertical = 8.dp)) {
+                row.forEachIndexed { index,cell ->
+                    Text(text = cell, modifier = Modifier
+                        .weight(1f)
+                        .padding(8.dp))
+                    if (index < row.size - 1) {
+                        Spacer(modifier = Modifier.width(1.dp))
+                    }
+                }
+            }
+            Divider(color = Color.Gray, thickness = 0.5.dp)
         }
     }
 
