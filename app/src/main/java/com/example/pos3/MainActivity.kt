@@ -51,6 +51,7 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -123,7 +124,6 @@ fun Admin() {
                 .get()
                 .addOnSuccessListener { document ->
                     if (document != null && document.exists()) {
-                        // Get the name from the document and set it to the userName state
                         val name = document.getString("Name")
                         if (name != null) {
                             userName.value = name
@@ -131,7 +131,6 @@ fun Admin() {
                     }
                 }
                 .addOnFailureListener {
-                    // Handle the failure here if necessary
                 }
         }
     }
@@ -197,12 +196,16 @@ fun Admin() {
                     }) {
                         Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu")
                     }
-                })
+                },  colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colorResource(id = R.color.purple_200)
+                ))
         }) {
-            Column(modifier = Modifier.fillMaxSize().padding(it), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(it), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box (modifier = Modifier
                     .fillMaxWidth()
-                    .height(245.dp)
+                    .height(200.dp)
                     .background(
                         color = colorResource(id = R.color.purple_200),
                         shape = RoundedCornerShape(bottomEnd = 40.dp, bottomStart = 40.dp)
@@ -210,7 +213,7 @@ fun Admin() {
                     Text(text = "Welcome, ${userName.value} ", fontSize = 20.sp)
 
                 }
-                Spacer(modifier = Modifier.size(30.dp))
+                Spacer(modifier = Modifier.size(20.dp))
                 Row (modifier = Modifier
                     .padding(top = 24.dp, start = 16.dp, end = 16.dp)
                     .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
@@ -226,6 +229,11 @@ fun Admin() {
                         Text(text = "Today's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        com.example.pos3.Badge()
+
+
+
+
 
                     }
                     Column(modifier = Modifier
@@ -239,6 +247,7 @@ fun Admin() {
                         Text(text = "Expired Products", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        com.example.pos3.Badge()
 
                     }
                     Column(modifier = Modifier
@@ -252,6 +261,7 @@ fun Admin() {
                         Text(text = "Products", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        com.example.pos3.Badge()
 
                     }
 
@@ -271,6 +281,7 @@ fun Admin() {
                         Text(text = "Suppliers", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        com.example.pos3.Badge()
 
                     }
                     Column(modifier = Modifier
@@ -284,6 +295,7 @@ fun Admin() {
                         Text(text = "Users", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        com.example.pos3.Badge()
 
                     }
                     Column(modifier = Modifier
@@ -297,6 +309,7 @@ fun Admin() {
                         Text(text = "Week's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        com.example.pos3.Badge()
 
                     }
 
@@ -316,6 +329,7 @@ fun Admin() {
                         Text(text = "Month's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        com.example.pos3.Badge()
 
                     }
                     Column(modifier = Modifier
@@ -329,6 +343,7 @@ fun Admin() {
                         Text(text = "Year's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        com.example.pos3.Badge()
 
                     }
                     Column(modifier = Modifier
@@ -342,6 +357,7 @@ fun Admin() {
                         Text(text = "Stores", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        com.example.pos3.Badge()
 
                     }
 
@@ -352,6 +368,26 @@ fun Admin() {
         }
     }
 
+}
+
+@Composable
+fun Badge() {
+    Box(
+        modifier = Modifier
+            .size(14.dp)
+            .clip(CircleShape)
+            .background(color = colorResource(id = R.color.purple_200)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "3",
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.align(Alignment.Center)
+
+        )
+    }
 }
 
 data class DrawerItems(
