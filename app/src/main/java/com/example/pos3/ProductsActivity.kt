@@ -221,6 +221,7 @@ suspend fun fetchProductsFromFirestore(): List<Product> {
         products.addAll(snapshot.documents.map { document ->
             Log.d("Firestore", "Document data: ${document.data}")
             Product(
+                id = document.id,
                 name = document.getString("Name") ?: "",
                 category = document.getString("Category") ?: "",
                 barcode = document.getString("Barcode") ?: "",
@@ -337,7 +338,7 @@ fun AddProductDialog(onDismiss: () -> Unit, onAddProduct: (Product) -> Unit) {
                             Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                         }else{
 
-                            val newProduct = Product(name, selectedCategory, barcode, price.toDouble(),null, null,  date.value, quantity.toInt())
+                            val newProduct = Product("",name, selectedCategory, barcode, price.toDouble(),null, null,  date.value, quantity.toInt())
                             onAddProduct(newProduct)
                         }
 
@@ -466,7 +467,8 @@ suspend fun updateProductInFirestore(product: Product, context: Context) {
         "Barcode" to product.barcode,
         "Price" to product.price,
         "ExpiryDate" to product.expiryDate,
-        "Quantity" to product.quantity
+        "Quantity" to product.quantity,
+        "Update" to com.google.firebase.Timestamp(java.util.Date())
     )
 
     db.collection("Products").document(product.barcode)
@@ -484,6 +486,7 @@ suspend fun updateProductInFirestore(product: Product, context: Context) {
 
 @Keep
 data class Product(
+    val id: String = "",
     val name: String,
     val category: String,
     val barcode: String,
