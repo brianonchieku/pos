@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -86,6 +87,8 @@ fun Products() {
     val products = remember { mutableStateOf<List<Product>>(emptyList()) }
     val scope = rememberCoroutineScope()
     val showDialog = remember { mutableStateOf(false) }
+    val showEditDialog = remember { mutableStateOf(false) }
+    val selectedProduct = remember { mutableStateOf<Product?>(null) }
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -123,8 +126,26 @@ fun Products() {
                         }
                     }
                 }
-                Spacer(modifier = Modifier.size(20.dp))
-                ProductsTable(products = products.value)
+                if (showEditDialog.value) {
+                    selectedProduct.value?.let { product ->
+                        EditProductDialog(
+                            product = product,
+                            onDismiss = { showEditDialog.value = false },
+                            onEditProduct = { updatedProduct ->
+                                scope.launch {
+                                    updateProductInFirestore(updatedProduct, context)
+                                    products.value = fetchProductsFromFirestore()
+                                    showEditDialog.value = false
+                                }
+                            }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.size(15.dp))
+                ProductsTable(products = products.value, onEdit = { product ->
+                    selectedProduct.value = product
+                    showEditDialog.value = true
+                })
 
             }
         }
@@ -132,7 +153,7 @@ fun Products() {
 }
 
 @Composable
-fun ProductsTable(products: List<Product>) {
+fun ProductsTable(products: List<Product>, onEdit: (Product) -> Unit) {
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
 
     val productList = products.map { product ->
@@ -146,8 +167,10 @@ fun ProductsTable(products: List<Product>) {
         )
     }
 
-    val tableHeaders = listOf("Name", "Category", "Price", "Quantity", "Expiry Date", "Created on")
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    val tableHeaders = listOf("Name", "Category", "Price", "Quantity", "Expiry Date", "Created on","Edit")
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .padding(16.dp)) {
         Row {
             tableHeaders.forEachIndexed { index,header ->
                 Text(text = header, modifier = Modifier
@@ -160,15 +183,22 @@ fun ProductsTable(products: List<Product>) {
         }
         Divider(color = Color.Black, thickness = 1.dp)
 
-        productList.forEach { row ->
+        products.forEachIndexed { rowIndex,product ->
             Row(modifier = Modifier.padding(vertical = 8.dp)) {
-                row.forEachIndexed { index,cell ->
+                val row = productList[rowIndex]
+                row.forEachIndexed { cellIndex,cell ->
                     Text(text = cell, modifier = Modifier
                         .weight(1f)
                         .padding(8.dp))
-                    if (index < row.size - 1) {
+                    if (cellIndex < row.size - 1) {
                         Spacer(modifier = Modifier.width(1.dp))
                     }
+                }
+                IconButton(onClick = {  onEdit(product) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(8.dp)) {
+                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit")
                 }
             }
             Divider(color = Color.Gray, thickness = 0.5.dp)
@@ -320,6 +350,67 @@ fun AddProductDialog(onDismiss: () -> Unit, onAddProduct: (Product) -> Unit) {
     }
 }
 
+@Composable
+fun EditProductDialog(
+    product: Product,
+    onDismiss: () -> Unit,
+    onEditProduct: (Product) -> Unit
+) {
+    var name by remember { mutableStateOf(product.name) }
+    var category by remember { mutableStateOf(product.category) }
+    var barcode by remember { mutableStateOf(product.barcode) }
+    var price by remember { mutableStateOf(product.price.toString()) }
+    var quantity by remember { mutableStateOf(product.quantity.toString()) }
+    var expiryDate by remember { mutableStateOf(product.expiryDate) }
+    val context = LocalContext.current
+
+    Dialog(onDismissRequest = { onDismiss() }) {
+        Card(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = "Edit Product", fontWeight = FontWeight.Bold)
+                TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
+                TextField(value = category, onValueChange = { category = it }, label = { Text("Category") })
+                TextField(value = barcode, onValueChange = { barcode = it }, label = { Text("Barcode") })
+                TextField(value = price, onValueChange = { price = it }, label = { Text("Price") })
+                TextField(value = quantity, onValueChange = { quantity = it }, label = { Text("Quantity") })
+                TextField(value = expiryDate, onValueChange = { expiryDate = it }, label = { Text("Expiry Date") })
+
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(onClick = { onDismiss() }) {
+                        Text("Cancel")
+                    }
+                    TextButton(onClick = {
+                        if (name.isEmpty() || category.isEmpty() || barcode.isEmpty() || price.isEmpty() || quantity.isEmpty() || expiryDate.isEmpty()) {
+                            Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                        } else {
+                            val updatedProduct = product.copy(
+                                name = name,
+                                category = category,
+                                barcode = barcode,
+                                price = price.toDouble(),
+                                quantity = quantity.toInt(),
+                                expiryDate = expiryDate
+                            )
+                            onEditProduct(updatedProduct)
+                        }
+                    }) {
+                        Text("Edit")
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 
 
 suspend fun fetchCategoriesFromFirestore(): List<String> {
@@ -366,6 +457,30 @@ suspend fun addProductToFirestore(product: Product, context: Context) {
             Toast.makeText(context, "Error adding product: ${e.message}", Toast.LENGTH_SHORT).show()
         }
 }
+
+suspend fun updateProductInFirestore(product: Product, context: Context) {
+    val db = FirebaseFirestore.getInstance()
+    val productData = hashMapOf(
+        "Name" to product.name,
+        "Category" to product.category,
+        "Barcode" to product.barcode,
+        "Price" to product.price,
+        "ExpiryDate" to product.expiryDate,
+        "Quantity" to product.quantity
+    )
+
+    db.collection("Products").document(product.barcode)
+        .set(productData)
+        .addOnSuccessListener {
+            Log.d("Firestore", "DocumentSnapshot successfully updated!")
+            Toast.makeText(context, "Updated successfully", Toast.LENGTH_SHORT).show()
+        }
+        .addOnFailureListener { e ->
+            Log.w("Firestore", "Error updating document", e)
+            Toast.makeText(context, "Error updating product: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+}
+
 
 @Keep
 data class Product(
