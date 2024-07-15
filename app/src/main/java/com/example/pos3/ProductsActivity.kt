@@ -137,6 +137,12 @@ fun Products() {
                                     products.value = fetchProductsFromFirestore()
                                     showEditDialog.value = false
                                 }
+                            },
+                            onDeleteProduct = { productId ->
+                                scope.launch {
+                                    deleteProductFromFirestore(productId, context)
+                                    products.value = fetchProductsFromFirestore()
+                                }
                             }
                         )
                     }
@@ -162,12 +168,12 @@ fun ProductsTable(products: List<Product>, onEdit: (Product) -> Unit) {
             product.category,
             product.price.toString(),
             product.quantity.toString(),
-            product.expiryDate,
-            product.create?.toDate()?.let { dateFormat.format(it) } ?: "N/A"
+            product.update?.toDate()?.let { dateFormat.format(it) } ?: "N/A",
+            product.expiryDate
         )
     }
 
-    val tableHeaders = listOf("Name", "Category", "Price", "Quantity", "Expiry Date", "Created on","Edit")
+    val tableHeaders = listOf("Name", "Category", "Price", "Quantity", "Updated on", "Expiry Date","Edit")
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(16.dp)) {
@@ -355,7 +361,8 @@ fun AddProductDialog(onDismiss: () -> Unit, onAddProduct: (Product) -> Unit) {
 fun EditProductDialog(
     product: Product,
     onDismiss: () -> Unit,
-    onEditProduct: (Product) -> Unit
+    onEditProduct: (Product) -> Unit,
+    onDeleteProduct: (String) -> Unit
 ) {
     var name by remember { mutableStateOf(product.name) }
     var category by remember { mutableStateOf(product.category) }
@@ -405,6 +412,13 @@ fun EditProductDialog(
                     }) {
                         Text("Edit")
                     }
+                    TextButton(onClick = {
+                        onDeleteProduct(product.id)
+                        onDismiss()
+                    }) {
+                        Text("Delete", color = Color.Red)
+                    }
+
                 }
             }
         }
@@ -471,7 +485,7 @@ suspend fun updateProductInFirestore(product: Product, context: Context) {
         "Update" to com.google.firebase.Timestamp(java.util.Date())
     )
 
-    db.collection("Products").document(product.barcode)
+    db.collection("Products").document(product.id)
         .set(productData)
         .addOnSuccessListener {
             Log.d("Firestore", "DocumentSnapshot successfully updated!")
@@ -482,6 +496,23 @@ suspend fun updateProductInFirestore(product: Product, context: Context) {
             Toast.makeText(context, "Error updating product: ${e.message}", Toast.LENGTH_SHORT).show()
         }
 }
+
+suspend fun deleteProductFromFirestore(productId: String, context: Context) {
+    val db = FirebaseFirestore.getInstance()
+
+    db.collection("Products").document(productId)
+        .delete()
+        .addOnSuccessListener {
+            Log.d("Firestore", "DocumentSnapshot successfully deleted!")
+            Toast.makeText(context, "Deleted successfully", Toast.LENGTH_SHORT).show()
+        }
+        .addOnFailureListener { e ->
+            Log.w("Firestore", "Error deleting document", e)
+            Toast.makeText(context, "Error deleting product: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+}
+
+
 
 
 @Keep
