@@ -371,6 +371,19 @@ fun EditProductDialog(
     var quantity by remember { mutableStateOf(product.quantity.toString()) }
     var expiryDate by remember { mutableStateOf(product.expiryDate) }
     val context = LocalContext.current
+    var showConfirmDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showConfirmDeleteDialog) {
+        ConfirmDeleteDialog(
+            onDismiss = { showConfirmDeleteDialog = false },
+            onConfirm = {
+                onDeleteProduct(product.id)
+                showConfirmDeleteDialog = false
+                onDismiss()
+            }
+        )
+    }
+
 
     Dialog(onDismissRequest = { onDismiss() }) {
         Card(
@@ -392,6 +405,12 @@ fun EditProductDialog(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    TextButton(onClick = {
+                        showConfirmDeleteDialog = true
+                    }) {
+                        Text("Delete", color = Color.Red)
+                    }
+                    Spacer(modifier = Modifier.size(65.dp))
                     TextButton(onClick = { onDismiss() }) {
                         Text("Cancel")
                     }
@@ -412,12 +431,7 @@ fun EditProductDialog(
                     }) {
                         Text("Edit")
                     }
-                    TextButton(onClick = {
-                        onDeleteProduct(product.id)
-                        onDismiss()
-                    }) {
-                        Text("Delete", color = Color.Red)
-                    }
+
 
                 }
             }
@@ -511,6 +525,35 @@ suspend fun deleteProductFromFirestore(productId: String, context: Context) {
             Toast.makeText(context, "Error deleting product: ${e.message}", Toast.LENGTH_SHORT).show()
         }
 }
+
+@Composable
+fun ConfirmDeleteDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    Dialog(onDismissRequest = { onDismiss() }) {
+        Card(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = "Confirm Deletion", fontWeight = FontWeight.Bold)
+                Text(text = "Are you sure you want to delete this product?")
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(onClick = { onDismiss() }) {
+                        Text("Cancel")
+                    }
+                    TextButton(onClick = { onConfirm() }) {
+                        Text("Delete", color = Color.Red)
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 
 
