@@ -61,7 +61,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.breens.beetablescompose.BeeTablesCompose
-import com.example.pos3.ui.theme.Pos3Theme
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.launch
@@ -248,11 +247,9 @@ suspend fun fetchProductsFromFirestore(): List<Product> {
 @Composable
 fun AddProductDialog(onDismiss: () -> Unit, onAddProduct: (Product) -> Unit) {
     var name by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
     var barcode by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
-    var expiryDate by remember { mutableStateOf("") }
     val context = LocalContext.current
     val categories = remember { mutableStateOf<List<String>>(emptyList()) }
     val scope = rememberCoroutineScope()
@@ -284,7 +281,7 @@ fun AddProductDialog(onDismiss: () -> Unit, onAddProduct: (Product) -> Unit) {
     val datePickerDialog = DatePickerDialog(
         context,
         { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-            date.value = "$dayOfMonth/$month/$year"
+            date.value = "$dayOfMonth/${month+1}/$year"
         }, year, month, day
     )
 
@@ -329,9 +326,6 @@ fun AddProductDialog(onDismiss: () -> Unit, onAddProduct: (Product) -> Unit) {
                         Icon(icon, "", modifier = Modifier.clickable {  datePickerDialog.show() } )
                     }
                 )
-
-
-
                 Row(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier.fillMaxWidth()
@@ -365,13 +359,45 @@ fun EditProductDialog(
     onDeleteProduct: (String) -> Unit
 ) {
     var name by remember { mutableStateOf(product.name) }
-    var category by remember { mutableStateOf(product.category) }
+    var selectedCategory by remember { mutableStateOf(product.category) }
     var barcode by remember { mutableStateOf(product.barcode) }
     var price by remember { mutableStateOf(product.price.toString()) }
     var quantity by remember { mutableStateOf(product.quantity.toString()) }
     var expiryDate by remember { mutableStateOf(product.expiryDate) }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var showConfirmDeleteDialog by remember { mutableStateOf(false) }
+    val categories = remember { mutableStateOf<List<String>>(emptyList()) }
+
+    var expanded by remember { mutableStateOf(false) }
+    val icon = if (expanded){
+        Icons.Filled.KeyboardArrowUp
+    }else{
+        Icons.Filled.KeyboardArrowDown
+    }
+
+    val year: Int
+    val month: Int
+    val day: Int
+
+    val calendar = Calendar.getInstance()
+    year = calendar.get(Calendar.YEAR)
+    month = calendar.get(Calendar.MONTH)
+    day = calendar.get(Calendar.DAY_OF_MONTH)
+    calendar.time = Date()
+
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+            expiryDate = "$dayOfMonth/${month+1}/$year"
+        }, year, month, day
+    )
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            categories.value = fetchCategoriesFromFirestore()
+        }
+    }
 
     if (showConfirmDeleteDialog) {
         ConfirmDeleteDialog(
@@ -395,12 +421,37 @@ fun EditProductDialog(
             ) {
                 Text(text = "Edit Product", fontWeight = FontWeight.Bold)
                 TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
-                TextField(value = category, onValueChange = { category = it }, label = { Text("Category") })
+                Box(modifier = Modifier.wrapContentSize(), contentAlignment = Alignment.Center) {
+                    TextField(value =selectedCategory ,
+                        modifier = Modifier.clickable { expanded=!expanded },
+                        onValueChange = {selectedCategory=it},
+                        label = { Text(text = "Category")},
+                        trailingIcon = {
+                            Icon(icon, "", modifier = Modifier.clickable { expanded=!expanded } )
+                        }, readOnly = true
+                    )
+                    DropdownMenu(expanded = expanded,
+                        onDismissRequest = { expanded=false}
+                    ) {
+                        categories.value.forEach { cat ->
+                            DropdownMenuItem(text = {Text(text = cat) }, onClick = {
+                                selectedCategory=cat
+                                expanded=false
+                            })
+                        }
+
+                    }
+
+                }
                 TextField(value = barcode, onValueChange = { barcode = it }, label = { Text("Barcode") })
                 TextField(value = price, onValueChange = { price = it }, label = { Text("Price") })
                 TextField(value = quantity, onValueChange = { quantity = it }, label = { Text("Quantity") })
-                TextField(value = expiryDate, onValueChange = { expiryDate = it }, label = { Text("Expiry Date") })
-
+                TextField(value = expiryDate, onValueChange = { expiryDate = it }, label = { Text("Expiry Date") },
+                    readOnly = true,
+                    trailingIcon = {
+                        Icon(icon, "", modifier = Modifier.clickable {  datePickerDialog.show() } )
+                    }
+                )
                 Row(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier.fillMaxWidth()
@@ -415,12 +466,12 @@ fun EditProductDialog(
                         Text("Cancel")
                     }
                     TextButton(onClick = {
-                        if (name.isEmpty() || category.isEmpty() || barcode.isEmpty() || price.isEmpty() || quantity.isEmpty() || expiryDate.isEmpty()) {
+                        if (name.isEmpty() || selectedCategory.isEmpty() || barcode.isEmpty() || price.isEmpty() || quantity.isEmpty() || expiryDate.isEmpty()) {
                             Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                         } else {
                             val updatedProduct = product.copy(
                                 name = name,
-                                category = category,
+                                category = selectedCategory,
                                 barcode = barcode,
                                 price = price.toDouble(),
                                 quantity = quantity.toInt(),
@@ -553,11 +604,6 @@ fun ConfirmDeleteDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
         }
     }
 }
-
-
-
-
-
 @Keep
 data class Product(
     val id: String = "",
@@ -574,7 +620,5 @@ data class Product(
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview6() {
-    Pos3Theme {
-        Products()
-    }
+    Products()
 }
