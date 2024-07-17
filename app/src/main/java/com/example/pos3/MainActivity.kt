@@ -72,7 +72,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.pos3.ui.theme.Pos3Theme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -82,10 +81,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Pos3Theme {
-                Admin()
-
-            }
+            Admin()
         }
     }
 }
@@ -98,7 +94,7 @@ fun Admin() {
         DrawerItems(Icons.Filled.AccountCircle, "users", 2, true),
         DrawerItems(Icons.Filled.Place, "suppliers", 20, true),
         DrawerItems(Icons.Filled.ShoppingCart, "products", 2, true),
-        DrawerItems(Icons.Filled.Search, "barcode scanner", 2, true),
+        DrawerItems(Icons.Filled.Search, "POS", 2, true),
         DrawerItems(Icons.Filled.MoreVert, "reports", 2, true),
         DrawerItems(Icons.Filled.Warning, "expired", 2, true),
         DrawerItems(Icons.Filled.KeyboardArrowLeft, "logout", 2, true),
@@ -160,6 +156,10 @@ fun Admin() {
                             }
                             if(it.text=="products"){
                                 val intent= Intent(context, ProductsActivity::class.java)
+                                context.startActivity(intent)
+                            }
+                            if(it.text=="POS"){
+                                val intent= Intent(context, SalesActivity::class.java)
                                 context.startActivity(intent)
                             }
 
@@ -401,8 +401,5 @@ data class DrawerItems(
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    Pos3Theme {
-        Admin()
-
-    }
+    Admin()
 }
