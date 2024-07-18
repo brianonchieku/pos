@@ -74,6 +74,7 @@ fun Login() {
             , contentDescription =null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop )
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center) {
+            Text(text = "Welcome back")
             Card(modifier = Modifier
                 .wrapContentSize()
                 .padding(30.dp),

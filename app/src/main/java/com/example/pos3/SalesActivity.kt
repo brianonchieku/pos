@@ -1,13 +1,16 @@
 package com.example.pos3
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -24,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,55 +40,71 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class SalesActivity : ComponentActivity() {
+    private val viewModel: SalesViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            SalesScreen()
+            val salesViewModel = SalesViewModel()
+            SalesScreen(salesViewModel)
         }
     }
 }
 @Composable
-fun SalesScreen() {
-    val items = listOf("Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape")
-    Sales(items = items)
+fun SalesScreen(viewModel: SalesViewModel) {
+    val products by viewModel.products
+    Sales(products)
 }
 @Composable
-fun Sales(items: List<String>) {
+fun Sales(products: List<ProductSale>) {
     Box (modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
         Column(modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             ) {
             var query by remember { mutableStateOf("") }
-            var filteredItems by remember { mutableStateOf(items) }
+            var filteredItems by remember { mutableStateOf(products) }
             var expanded by remember { mutableStateOf(false) }
 
 
             // Update the filtered list whenever the query changes
             LaunchedEffect(query) {
                 filteredItems = if (query.isEmpty()) {
-                    items
+                    products
                 } else {
-                    items.filter { it.contains(query, ignoreCase = true) }
+                    products.filter { it.name.contains(query, ignoreCase = true) }
                 }
             }
 
             Column {
-                SearchBar(query, expanded) {
+                SearchBar(query, expanded, onQueryChanged = {
                     query = it
                     expanded = true
-                }
+                }, onTextFieldFocused = { expanded = true })
+
                 DropdownMenu(
                     expanded = expanded && filteredItems.isNotEmpty(),
                     onDismissRequest = { expanded = false }
                 ) {
-                    filteredItems.forEach { item ->
+                    filteredItems.forEach { product ->
                         DropdownMenuItem(
-                            text = { Text(text = item) },
+                            text = {
+                                Row {
+                                    Text(text = product.name)
+                                    Text(text = " - $${product.price}")
+                                }
+                            },
                             onClick = {
-                                query = item
+                                query = product.name
                                 expanded = false
                             }
                         )
@@ -95,7 +115,8 @@ fun Sales(items: List<String>) {
     }
 }
 @Composable
-fun SearchBar(query: String,expanded: Boolean, onQueryChanged: (String) -> Unit) {
+fun SearchBar(query: String,expanded: Boolean, onQueryChanged: (String) -> Unit,
+              onTextFieldFocused: () -> Unit) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -109,7 +130,6 @@ fun SearchBar(query: String,expanded: Boolean, onQueryChanged: (String) -> Unit)
             .padding(16.dp)
             .focusRequester(focusRequester)
             .clickable {
-                onQueryChanged(query)
                 focusRequester.requestFocus()
                 keyboardController?.show()
             },
@@ -129,9 +149,39 @@ fun SearchBar(query: String,expanded: Boolean, onQueryChanged: (String) -> Unit)
     }
 }
 
+class SalesViewModel : ViewModel() {
+    var products = mutableStateOf<List<ProductSale>>(emptyList())
+        private set
+
+    init {
+        viewModelScope.launch {
+            products.value = fetchProducts()
+        }
+    }
+
+    private suspend fun fetchProducts(): List<ProductSale> {
+        val db = FirebaseFirestore.getInstance()
+        val products = mutableListOf<ProductSale>()
+        try {
+            val snapshot = db.collection("Products").get().await()
+            products.addAll(snapshot.documents.map { document ->
+                ProductSale(
+                    name = document.getString("Name") ?: "",
+                    price = document.getDouble("Price") ?: 0.0
+                )
+            })
+        } catch (e: FirebaseFirestoreException) {
+            Log.d("Firestore", "Error fetching data from Firestore: ${e.message}")
+        }
+        return products
+    }
+}
+
+data class ProductSale(val name: String, val price: Double)
+
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview5() {
-    SalesScreen()
+    SalesScreen(SalesViewModel())
 }

@@ -211,12 +211,6 @@ fun ProductsTable(products: List<Product>, onEdit: (Product) -> Unit) {
     }
 
 }
-
-
-
-
-
-
 suspend fun fetchProductsFromFirestore(): List<Product> {
     val db = FirebaseFirestore.getInstance()
     val products = mutableListOf<Product>()
@@ -224,7 +218,6 @@ suspend fun fetchProductsFromFirestore(): List<Product> {
     try {
         val snapshot = db.collection("Products").get().await()
         products.addAll(snapshot.documents.map { document ->
-            Log.d("Firestore", "Document data: ${document.data}")
             Product(
                 id = document.id,
                 name = document.getString("Name") ?: "",
