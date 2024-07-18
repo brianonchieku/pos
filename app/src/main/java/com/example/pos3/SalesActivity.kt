@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Divider
@@ -43,6 +44,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -116,7 +118,11 @@ fun Sales(products: List<ProductSale>,items: List<String>) {
                         )
                     }
                 }
-                ProductTable(products = selectedProducts)
+                ProductTable(products = selectedProducts, onQuantityChange = { product, newQuantity ->
+                    selectedProducts = selectedProducts.map {
+                        if (it.name == product.name) it.copy(quantity = newQuantity) else it
+                    }.filter { it.quantity>0 } //remove item from table
+                })
             }
         }
     }
@@ -156,14 +162,7 @@ fun SearchBar(query: String,expanded: Boolean, onQueryChanged: (String) -> Unit,
     }
 }
 @Composable
-fun ProductTable(products: List<ProductSale>) {
-
-    val productList = products.map { product ->
-        listOf(
-            product.name,
-            product.price.toString()
-        )
-    }
+fun ProductTable(products: List<ProductSale>, onQuantityChange: (ProductSale, Int) -> Unit) {
 
     val tableHeaders = listOf("Name", "Quantity", "Price", "Total")
     Column(modifier = Modifier
@@ -183,13 +182,39 @@ fun ProductTable(products: List<ProductSale>) {
 
         products.forEachIndexed { rowIndex,product ->
             Row(modifier = Modifier.padding(vertical = 8.dp)) {
-                val row = productList[rowIndex]
-                row.forEachIndexed { cellIndex,cell ->
-                    Text(text = cell, modifier = Modifier
-                        .weight(1f)
-                        .padding(8.dp))
-                    if (cellIndex < row.size - 1) {
-                        Spacer(modifier = Modifier.width(1.dp))
+                Text(text = product.name, modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp))
+                Text(text = product.quantity.toString(), modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp))
+                Text(text = product.price.toString(), modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp))
+                Text(text = (product.price * product.quantity).toString(), modifier = Modifier
+                    .weight(1f)
+                    .padding(8.dp))
+                Row(modifier = Modifier.weight(1f)) {
+                    IconButton(onClick = {
+                        if (product.quantity > 1) {
+                            onQuantityChange(product, product.quantity - 1)
+                        }else {
+                            // Remove the item if quantity is 1
+                            onQuantityChange(product, 0)
+                        }
+                    },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp)) {
+                        Icon(painter = painterResource(id = R.drawable.baseline_minimize_24), contentDescription = null)
+                    }
+                    IconButton(onClick = {
+                        onQuantityChange(product, product.quantity + 1)
+                    },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp)) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = null)
                     }
                 }
             }
@@ -231,7 +256,10 @@ class SalesViewModel : ViewModel() {
 
 }
 
-data class ProductSale(val name: String, val price: Double)
+data class ProductSale(
+    val name: String,
+    val price: Double,
+    val quantity: Int = 1)
 
 
 @Preview(showBackground = true)
