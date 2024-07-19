@@ -28,6 +28,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -139,6 +141,13 @@ fun Sales(products: List<ProductSale>,items: List<String>) {
                         if (it.name == product.name) it.copy(quantity = newQuantity) else it
                     }.filter { it.quantity>0 } //remove item from table
                 })
+
+                Spacer(modifier = Modifier.size(20.dp))
+                Button(onClick = { /*TODO*/ }, enabled = selectedProducts.isNotEmpty(),
+                    modifier = Modifier.padding(top = 16.dp)) {
+                    Text(text = "Proceed")
+
+                }
                 
             }
         }
@@ -286,7 +295,9 @@ fun ProductTable(products: List<ProductSale>, onQuantityChange: (ProductSale, In
                     Text(text = "select payment method")
                 }, trailingIcon = {
                     Icon(icon, "", modifier = Modifier.clickable { expanded=!expanded } )
-                }, modifier = Modifier.wrapContentSize().background(color = colorResource(id = R.color.white)),
+                }, modifier = Modifier
+                    .wrapContentSize()
+                    .background(color = colorResource(id = R.color.white)),
                 colors = TextFieldDefaults.textFieldColors(
                     containerColor = Color.White,
                     focusedIndicatorColor = Color.Transparent,
@@ -305,6 +316,7 @@ fun ProductTable(products: List<ProductSale>, onQuantityChange: (ProductSale, In
             }
             
         }
+
         
     }
 }
@@ -337,6 +349,46 @@ class SalesViewModel : ViewModel() {
         viewModelScope.launch {
             _products.value = fetchProducts()
         }
+    }
+
+
+}
+
+@Composable
+fun CashDialog(){
+    var cashGiven by remember {mutableStateOf("") }
+    var subTotal by remember {mutableStateOf("") }
+    var change by remember {mutableStateOf("") }
+
+    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center) {
+        Card(modifier = Modifier.padding(16.dp)) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = "Cash Payment", fontWeight = FontWeight.Bold)
+                Row (){
+                    Text(text = "Cash Given: ")
+                    TextField(value = cashGiven, onValueChange ={cashGiven=it} )
+                }
+                Row (){
+                    Text(text = "Sub Total: ")
+                    TextField(value = subTotal, onValueChange ={subTotal=it} )
+                }
+                Row (){
+                    Text(text = "Change: ")
+                    TextField(value = change, onValueChange ={change=it} )
+                }
+                Button(onClick = { /*TODO*/ }) {
+                    Text(text = "Pay")
+
+                }
+
+            }
+
+        }
+
     }
 
 
