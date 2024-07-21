@@ -15,10 +15,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -92,10 +94,18 @@ fun Sales2(viewModel: SalesViewModel2) {
     Box (modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 56.dp),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Box (modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .background(
+                    color = colorResource(id = R.color.purple_200),
+                    shape = RoundedCornerShape(bottomEnd = 40.dp, bottomStart = 40.dp)
+                ), contentAlignment = Alignment.Center){
+                Text(text = "POS", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            }
             SearchBar(
                 query = searchQuery,
                 items = products,
