@@ -162,6 +162,10 @@ fun Admin() {
                                 val intent= Intent(context, SalesActivity::class.java)
                                 context.startActivity(intent)
                             }
+                            if(it.text=="reports"){
+                                val intent= Intent(context, SalesActivity2::class.java)
+                                context.startActivity(intent)
+                            }
 
 
 
