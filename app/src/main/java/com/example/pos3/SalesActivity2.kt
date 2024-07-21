@@ -1,6 +1,7 @@
 package com.example.pos3
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -45,11 +46,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
@@ -77,6 +81,7 @@ fun Sales2(viewModel: SalesViewModel2) {
     var selectedProducts by remember { mutableStateOf(products) }
     var paymentMethod by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
+    val context= LocalContext.current
 
     Column(
         modifier = Modifier
@@ -101,7 +106,17 @@ fun Sales2(viewModel: SalesViewModel2) {
                 }.filter { it.quantity > 0 }
             },
             onPaymentMethodChange = { paymentMethod = it },
-            onProceedClick = { showDialog = true },
+            onProceedClick = {
+                if (selectedProducts.isNotEmpty() && paymentMethod.isNotEmpty()) {
+                    if (paymentMethod == "Cash") {
+                        showDialog = true
+                    }else{
+                        Toast.makeText(context, "Mobile Payment", Toast.LENGTH_SHORT).show()
+                    }
+                }else{
+                    Toast.makeText(context, "Please select payment method", Toast.LENGTH_SHORT).show()
+                }
+            },
             paymentMethod = paymentMethod
         )
         // Add more UI elements here
@@ -325,40 +340,39 @@ fun CashDialog2(onDismiss: () -> Unit){
     var subTotal by remember {mutableStateOf("") }
     var change by remember {mutableStateOf("") }
 
-    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center) {
-        Card(modifier = Modifier.padding(16.dp)) {
+    Dialog(onDismissRequest = { onDismiss() }) {
+        Card(
+            modifier = Modifier.padding(16.dp)
+        ) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(text = "Cash Payment", fontWeight = FontWeight.Bold)
-                Row (){
-                    Text(text = "Cash Given: ")
-                    TextField(value = cashGiven, onValueChange ={cashGiven=it} )
-                }
-                Row (){
-                    Text(text = "Sub Total: ")
-                    TextField(value = subTotal, onValueChange ={subTotal=it} )
-                }
-                Row (){
-                    Text(text = "Change: ")
-                    TextField(value = change, onValueChange ={change=it} )
-                }
+                Spacer(modifier = Modifier.size(10.dp))
+                OutlinedTextField(value = cashGiven, onValueChange ={ cashGiven=it}, label = { Text("Cash Given") })
+                Spacer(modifier = Modifier.size(10.dp))
+                Text(text = "Sub Total: $subTotal",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally))
+                Spacer(modifier = Modifier.size(10.dp))
+                Text(text = "Change: $change",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally))
+                Spacer(modifier = Modifier.size(10.dp))
                 Row(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text("Cancel", color = colorResource(id = R.color.purple_200))
                     }
                     TextButton(onClick = { /*TODO*/ }) {
-                        Text("Pay")
+                        Text("Pay", color = colorResource(id = R.color.purple_500))
                     }
                 }
-
-                Spacer(modifier = Modifier.size(16.dp))
-
             }
         }
     }
