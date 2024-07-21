@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -38,6 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,50 +85,58 @@ fun Sales2(viewModel: SalesViewModel2) {
     var paymentMethod by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
     val context= LocalContext.current
+    val subtotal = selectedProducts.sumOf { it.price * it.quantity }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        SearchBar(
-            query = searchQuery,
-            items = products,
-            onQueryChanged = { searchQuery = it },
-            onProductSelected = { product ->
-                if (selectedProducts.none { it.name == product.name }) {
-                    selectedProducts = selectedProducts + product
-                }
-            }
-        )
-        ProductTable2(
-            products = selectedProducts,
-            onQuantityChange = { product, quantity ->
-                selectedProducts = selectedProducts.map {
-                    if (it.name == product.name) it.copy(quantity = quantity) else it
-                }.filter { it.quantity > 0 }
-            },
-            onPaymentMethodChange = { paymentMethod = it },
-            onProceedClick = {
-                if (selectedProducts.isNotEmpty() && paymentMethod.isNotEmpty()) {
-                    if (paymentMethod == "Cash") {
-                        showDialog = true
-                    }else{
-                        Toast.makeText(context, "Mobile Payment", Toast.LENGTH_SHORT).show()
+
+    Box (modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 86.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            SearchBar(
+                query = searchQuery,
+                items = products,
+                onQueryChanged = { searchQuery = it },
+                onProductSelected = { product ->
+                    if (selectedProducts.none { it.name == product.name }) {
+                        selectedProducts = selectedProducts + product
                     }
-                }else{
-                    Toast.makeText(context, "Please select payment method", Toast.LENGTH_SHORT).show()
                 }
-            },
-            paymentMethod = paymentMethod
-        )
-        // Add more UI elements here
+            )
+            ProductTable2(
+                products = selectedProducts,
+                onQuantityChange = { product, quantity ->
+                    selectedProducts = selectedProducts.map {
+                        if (it.name == product.name) it.copy(quantity = quantity) else it
+                    }.filter { it.quantity > 0 }
+                },
+                onPaymentMethodChange = { paymentMethod = it },
+                onProceedClick = {
+                    if (selectedProducts.isNotEmpty() && paymentMethod.isNotEmpty()) {
+                        if (paymentMethod == "Cash") {
+                            showDialog = true
+                        }else{
+                            Toast.makeText(context, "Mobile Payment", Toast.LENGTH_SHORT).show()
+                        }
+                    }else{
+                        Toast.makeText(context, "Please select payment method", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                paymentMethod = paymentMethod
+            )
+            // Add more UI elements here
+        }
+        if (showDialog) {
+            CashDialog2(
+                subtotal = subtotal,
+                onDismiss = { showDialog = false }
+            )
+        }
     }
-    if (showDialog) {
-        CashDialog2(
-            onDismiss = { showDialog = false }
-        )
-    }
+
+
 
 }
 @Composable
@@ -335,12 +346,16 @@ class SalesViewModel2 : ViewModel() {
 }
 
 @Composable
-fun CashDialog2(onDismiss: () -> Unit){
+fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double){
     var cashGiven by remember {mutableStateOf("") }
-    var subTotal by remember {mutableStateOf("") }
     var change by remember {mutableStateOf("") }
 
-    Dialog(onDismissRequest = { onDismiss() }) {
+    LaunchedEffect(cashGiven) {
+        val cashGivenValue = cashGiven.toDoubleOrNull() ?: 0.0
+        change = (cashGivenValue - subtotal).toString()
+    }
+
+    Dialog(onDismissRequest = {}) {
         Card(
             modifier = Modifier.padding(16.dp)
         ) {
@@ -350,9 +365,13 @@ fun CashDialog2(onDismiss: () -> Unit){
             ) {
                 Text(text = "Cash Payment", fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.size(10.dp))
-                OutlinedTextField(value = cashGiven, onValueChange ={ cashGiven=it}, label = { Text("Cash Given") })
+                OutlinedTextField(value = cashGiven,
+                    onValueChange ={ cashGiven=it},
+                    label = { Text("Cash Given")},
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
                 Spacer(modifier = Modifier.size(10.dp))
-                Text(text = "Sub Total: $subTotal",
+                Text(text = "Sub Total: $subtotal",
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     modifier = Modifier.align(Alignment.CenterHorizontally))
