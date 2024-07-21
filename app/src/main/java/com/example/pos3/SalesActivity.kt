@@ -90,26 +90,27 @@ fun SalesScreen(viewModel: SalesViewModel) {
 }
 @Composable
 fun Sales(products: List<ProductSale>,items: List<String>) {
+    var query by remember { mutableStateOf("") }
+    var filteredItems by remember { mutableStateOf(items) }
+    var expanded by remember { mutableStateOf(false) }
+    var selectedProducts by remember { mutableStateOf(listOf<ProductSale>()) }
+    var showCashDialog by remember { mutableStateOf(false) }
+    var paymentMethod by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    // Update the filtered list whenever the query changes
+    LaunchedEffect(query) {
+        filteredItems = if (query.isEmpty()) {
+            items
+        } else {
+            items.filter { it.contains(query, ignoreCase = true) }
+        }
+    }
     Box (modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
         Column(modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-            var query by remember { mutableStateOf("") }
-            var filteredItems by remember { mutableStateOf(items) }
-            var expanded by remember { mutableStateOf(false) }
-            var selectedProducts by remember { mutableStateOf(listOf<ProductSale>()) }
-            var showCashDialog by remember { mutableStateOf(false) }
-            var paymentMethod by remember { mutableStateOf("") }
-            val context = LocalContext.current
 
-            // Update the filtered list whenever the query changes
-            LaunchedEffect(query) {
-                filteredItems = if (query.isEmpty()) {
-                    items
-                } else {
-                    items.filter { it.contains(query, ignoreCase = true) }
-                }
-            }
             Box(modifier = Modifier.wrapContentSize(), contentAlignment = Alignment.Center) {
                 SearchBar(query, expanded, onQueryChanged = {
                     query = it
@@ -154,9 +155,9 @@ fun Sales(products: List<ProductSale>,items: List<String>) {
             })
 
         }
-       // if (showCashDialog) {
-           // CashDialog(onDismiss = { showCashDialog = false })
-        //}
+       if (showCashDialog) {
+            CashDialog(onDismiss = { showCashDialog = false })
+        }
 
     }
 }

@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -32,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -74,6 +76,7 @@ fun Sales2(viewModel: SalesViewModel2) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedProducts by remember { mutableStateOf(products) }
     var paymentMethod by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -98,10 +101,15 @@ fun Sales2(viewModel: SalesViewModel2) {
                 }.filter { it.quantity > 0 }
             },
             onPaymentMethodChange = { paymentMethod = it },
-            onProceedClick = { /* Handle proceed action */ },
+            onProceedClick = { showDialog = true },
             paymentMethod = paymentMethod
         )
         // Add more UI elements here
+    }
+    if (showDialog) {
+        CashDialog2(
+            onDismiss = { showDialog = false }
+        )
     }
 
 }
@@ -273,6 +281,11 @@ fun ProductTable2(
                 }
             }
         }
+        Spacer(modifier = Modifier.size(20.dp))
+        Button(onClick = onProceedClick, modifier = Modifier
+            .padding(vertical = 16.dp)) {
+            Text(text = "Proceed")
+        }
 
     }
 }
@@ -301,6 +314,51 @@ class SalesViewModel2 : ViewModel() {
                 _products.value = productsList
             } catch (e: Exception) {
                 // Handle the error
+            }
+        }
+    }
+}
+
+@Composable
+fun CashDialog2(onDismiss: () -> Unit){
+    var cashGiven by remember {mutableStateOf("") }
+    var subTotal by remember {mutableStateOf("") }
+    var change by remember {mutableStateOf("") }
+
+    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center) {
+        Card(modifier = Modifier.padding(16.dp)) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = "Cash Payment", fontWeight = FontWeight.Bold)
+                Row (){
+                    Text(text = "Cash Given: ")
+                    TextField(value = cashGiven, onValueChange ={cashGiven=it} )
+                }
+                Row (){
+                    Text(text = "Sub Total: ")
+                    TextField(value = subTotal, onValueChange ={subTotal=it} )
+                }
+                Row (){
+                    Text(text = "Change: ")
+                    TextField(value = change, onValueChange ={change=it} )
+                }
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    TextButton(onClick = { /*TODO*/ }) {
+                        Text("Pay")
+                    }
+                }
+
+                Spacer(modifier = Modifier.size(16.dp))
+
             }
         }
     }
