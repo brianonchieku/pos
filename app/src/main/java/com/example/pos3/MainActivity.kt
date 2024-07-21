@@ -159,13 +159,10 @@ fun Admin() {
                                 context.startActivity(intent)
                             }
                             if(it.text=="POS"){
-                                val intent= Intent(context, SalesActivity::class.java)
-                                context.startActivity(intent)
-                            }
-                            if(it.text=="reports"){
                                 val intent= Intent(context, SalesActivity2::class.java)
                                 context.startActivity(intent)
                             }
+
 
 
 
@@ -209,7 +206,7 @@ fun Admin() {
                 .padding(it), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box (modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(150.dp)
                     .background(
                         color = colorResource(id = R.color.purple_200),
                         shape = RoundedCornerShape(bottomEnd = 40.dp, bottomStart = 40.dp)

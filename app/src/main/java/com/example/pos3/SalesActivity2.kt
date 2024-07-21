@@ -83,7 +83,8 @@ fun Sales2(viewModel: SalesViewModel2) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedProducts by remember { mutableStateOf(products) }
     var paymentMethod by remember { mutableStateOf("") }
-    var showDialog by remember { mutableStateOf(false) }
+    var showCashDialog by remember { mutableStateOf(false) }
+    var showMPesaDialog by remember { mutableStateOf(false) }
     val context= LocalContext.current
     val subtotal = selectedProducts.sumOf { it.price * it.quantity }
 
@@ -92,7 +93,7 @@ fun Sales2(viewModel: SalesViewModel2) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 86.dp),
+                .padding(top = 56.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             SearchBar(
@@ -115,23 +116,29 @@ fun Sales2(viewModel: SalesViewModel2) {
                 onPaymentMethodChange = { paymentMethod = it },
                 onProceedClick = {
                     if (selectedProducts.isNotEmpty() && paymentMethod.isNotEmpty()) {
-                        if (paymentMethod == "Cash") {
-                            showDialog = true
-                        }else{
-                            Toast.makeText(context, "Mobile Payment", Toast.LENGTH_SHORT).show()
+                        when (paymentMethod) {
+                            "Cash" -> showCashDialog = true
+                            "Mobile Payment" -> showMPesaDialog = true
+                            "" -> Toast.makeText(context, "Select Payment Method", Toast.LENGTH_SHORT).show()
                         }
                     }else{
-                        Toast.makeText(context, "Please select payment method", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Please select products", Toast.LENGTH_SHORT).show()
                     }
                 },
                 paymentMethod = paymentMethod
             )
             // Add more UI elements here
         }
-        if (showDialog) {
+        if (showCashDialog) {
             CashDialog2(
                 subtotal = subtotal,
-                onDismiss = { showDialog = false }
+                onDismiss = { showCashDialog = false }
+            )
+        }
+        if (showMPesaDialog) {
+            MPesaDialog(
+                subtotal = subtotal,
+                onDismiss = { showMPesaDialog = false }
             )
         }
     }
@@ -286,7 +293,8 @@ fun ProductTable2(
             TextField(value =paymentMethod , onValueChange = onPaymentMethodChange,
                 label = {
                     Text(text = "select payment method")
-                }, trailingIcon = {
+                }, readOnly = true,
+                trailingIcon = {
                     Icon(icon, "", modifier = Modifier.clickable { expanded=!expanded } )
                 }, modifier = Modifier
                     .wrapContentSize()
@@ -396,6 +404,51 @@ fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double){
         }
     }
 }
+
+@Composable
+fun MPesaDialog(onDismiss: () -> Unit, subtotal: Double) {
+    var phoneNumber by remember { mutableStateOf("") }
+
+    Dialog(onDismissRequest = {}) {
+        Card(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = "MPesa Payment", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.size(10.dp))
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    label = { Text("Phone Number") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                )
+                Spacer(modifier = Modifier.size(10.dp))
+                Text(
+                    text = "Sub Total: $subtotal",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel", color = colorResource(id = R.color.purple_200))
+                    }
+                    TextButton(onClick = { /* TODO: Handle MPesa Payment */ }) {
+                        Text("Pay", color = colorResource(id = R.color.purple_500))
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 data class ProductSale2(
     val name: String,
