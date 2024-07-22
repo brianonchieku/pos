@@ -10,4 +10,5 @@
     <string name="title_activity_dashboard_test">DashboardTestActivity</string>
     <string name="title_activity_sales">SalesActivity</string>
     <string name="title_activity_sales2">SalesActivity2</string>
+    <string name="title_activity_mpesa">MpesaActivity</string>
 </resources>
