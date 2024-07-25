@@ -483,9 +483,6 @@ fun EditProductDialog(
     }
 }
 
-
-
-
 suspend fun fetchCategoriesFromFirestore(): List<String> {
     val db = FirebaseFirestore.getInstance()
     val categories = mutableListOf<String>()

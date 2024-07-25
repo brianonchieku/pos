@@ -23,6 +23,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -34,7 +36,6 @@ class MpesaActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Mpesa()
-
         }
     }
 }
@@ -43,7 +44,7 @@ fun Mpesa() {
 
 }
 
-interface DarajaApiService {
+/*interface DarajaApiService {
 
     @FormUrlEncoded
     @POST("oauth/v1/generate")
@@ -154,10 +155,23 @@ data class PaymentResponse(
     @SerializedName("ResponseDescription") val responseDescription: String,
     @SerializedName("CustomerMessage") val customerMessage: String
 )
+private lateinit var mpesaViewModel: MpesaViewModel
+// Create the repository and factory
+val retrofit = Retrofit.Builder()
+    .baseUrl("https://sandbox.safaricom.co.ke/") // or your base URL
+    .addConverterFactory(GsonConverterFactory.create())
+    .build()
+
+val apiService = retrofit.create(DarajaApiService::class.java)
+val repository = MpesaRepository(apiService)
+val factory = MpesaViewModelFactory(repository)
+
+// Initialize the ViewModel using the factory
+mpesaViewModel = ViewModelProvider(this, factory).get(MpesaViewModel::class.java)
 
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview8() {
     Mpesa()
-}
+}*/

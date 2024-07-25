@@ -1,6 +1,7 @@
 package com.example.pos3
 
 import android.os.Bundle
+import android.util.Base64
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -44,6 +45,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -59,17 +61,36 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
+import retrofit2.http.Header
+import retrofit2.http.POST
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 
 class SalesActivity2 : ComponentActivity() {
     private val salesViewModel: SalesViewModel2 by viewModels()
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -142,7 +163,15 @@ fun Sales2(viewModel: SalesViewModel2) {
         if (showCashDialog) {
             CashDialog2(
                 subtotal = subtotal,
-                onDismiss = { showCashDialog = false }
+                onDismiss = { showCashDialog = false },
+                onPayClick = {
+                    viewModel.saveSale(subtotal, "Cash", selectedProducts) {
+                        showCashDialog = false
+                        selectedProducts = listOf()
+                        paymentMethod = ""
+                        Toast.makeText(context, "payment successful", Toast.LENGTH_SHORT).show()
+                    }
+                }
             )
         }
         if (showMPesaDialog) {
@@ -361,10 +390,34 @@ class SalesViewModel2 : ViewModel() {
             }
         }
     }
+    fun saveSale(subtotal: Double, paymentMethod: String, items: List<ProductSale2>, onComplete: () -> Unit) {
+        viewModelScope.launch {
+            val transactionId = UUID.randomUUID().toString()
+            val employee = FirebaseAuth.getInstance().currentUser?.uid
+            val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).format(Date())
+            val sale = Sale(
+                transactionId = transactionId,
+                date = date,
+                amount = subtotal,
+                paymentMethod = paymentMethod,
+                items = items,
+                employeeId = employee,
+                status = "completed"
+            )
+
+            try {
+                val db = FirebaseFirestore.getInstance()
+                db.collection("Sales").document(transactionId).set(sale).await()
+                onComplete()
+            } catch (e: Exception) {
+                // Handle the error
+            }
+        }
+    }
 }
 
 @Composable
-fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double){
+fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double, onPayClick: () -> Unit){
     var cashGiven by remember {mutableStateOf("") }
     var change by remember {mutableStateOf("") }
 
@@ -406,7 +459,7 @@ fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double){
                     TextButton(onClick = onDismiss) {
                         Text("Cancel", color = colorResource(id = R.color.purple_200))
                     }
-                    TextButton(onClick = { /*TODO*/ }) {
+                    TextButton(onClick = { onPayClick }) {
                         Text("Pay", color = colorResource(id = R.color.purple_500))
                     }
                 }
@@ -418,6 +471,7 @@ fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double){
 @Composable
 fun MPesaDialog(onDismiss: () -> Unit, subtotal: Double) {
     var phoneNumber by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     Dialog(onDismissRequest = {}) {
         Card(
@@ -427,7 +481,7 @@ fun MPesaDialog(onDismiss: () -> Unit, subtotal: Double) {
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(text = "MPesa Payment", fontWeight = FontWeight.Bold)
+                Text(text = "M-Pesa Payment", fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.size(10.dp))
                 OutlinedTextField(
                     value = phoneNumber,
@@ -450,7 +504,7 @@ fun MPesaDialog(onDismiss: () -> Unit, subtotal: Double) {
                     TextButton(onClick = onDismiss) {
                         Text("Cancel", color = colorResource(id = R.color.purple_200))
                     }
-                    TextButton(onClick = { /* TODO: Handle MPesa Payment */ }) {
+                    TextButton(onClick = { }) {
                         Text("Pay", color = colorResource(id = R.color.purple_500))
                     }
                 }
@@ -459,14 +513,25 @@ fun MPesaDialog(onDismiss: () -> Unit, subtotal: Double) {
     }
 }
 
-
 data class ProductSale2(
     val name: String,
     val price: Double,
     val quantity: Int = 1)
 
+data class Sale(
+    val transactionId: String,
+    val date: String,
+    val amount: Double,
+    val paymentMethod: String,
+    val items: List<ProductSale2>,
+    val employeeId: String?,
+    val status: String
+)
+
+
+
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview7() {
-   Sales2(viewModel = SalesViewModel2())
+  //Sales2(viewModel = SalesViewModel2())
 }
