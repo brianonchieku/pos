@@ -80,7 +80,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoField
+import java.time.LocalTime
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -109,17 +112,14 @@ fun Admin() {
     )
 
     val context = LocalContext.current
-
-
-    var selectedItem by remember{
-        mutableStateOf(drawerItem[0])
-    }
-
+    var selectedItem by remember{ mutableStateOf(drawerItem[0]) }
     val drawerState= rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userName = remember { mutableStateOf("Admin") }
     val itemCounts = remember { mutableStateOf(mapOf<String, Int>()) }
+    val salesAmounts = remember { mutableStateOf(mapOf<String, Double>()) }
+
 
 
     LaunchedEffect(currentUser) {
@@ -139,6 +139,7 @@ fun Admin() {
                 .addOnFailureListener {}
 
             fetchCounts(db, itemCounts)
+            fetchSalesAmounts(db, salesAmounts)
         }
     }
 
@@ -184,9 +185,6 @@ fun Admin() {
                                 val intent= Intent(context, SalesActivity2::class.java)
                                 context.startActivity(intent)
                             }
-
-
-
 
                         },
                         modifier = Modifier.padding(horizontal = 20.dp),
@@ -261,6 +259,8 @@ fun Admin() {
                         Text(text = "Today's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        Text(text = "Kshs ${salesAmounts.value["today"] ?: 0.0}", fontSize = 14.sp)
+                    }
 
                     }
                     Column(modifier = Modifier
@@ -335,6 +335,7 @@ fun Admin() {
                         Text(text = "Week's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        Text(text = "Kshs ${salesAmounts.value["week"] ?: 0.0}", fontSize = 14.sp)
 
 
                     }
@@ -355,6 +356,7 @@ fun Admin() {
                         Text(text = "Month's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        Text(text = "Kshs ${salesAmounts.value["month"] ?: 0.0}", fontSize = 14.sp)
 
                     }
                     Column(modifier = Modifier
@@ -368,6 +370,7 @@ fun Admin() {
                         Text(text = "Year's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
+                        Text(text = "Kshs ${salesAmounts.value["year"] ?: 0.0}", fontSize = 14.sp)
 
                     }
                     Column(modifier = Modifier
@@ -382,7 +385,6 @@ fun Admin() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
                         Badge(count = itemCounts.value["stores"] ?: 0)
-
                     }
 
                 }
@@ -391,7 +393,6 @@ fun Admin() {
         }
     }
 
-}
 fun fetchCounts(db: FirebaseFirestore, itemCounts: MutableState<Map<String, Int>>) {
     db.collection("Products").whereEqualTo("isExpired", true).get()
         .addOnSuccessListener { documents ->
@@ -423,6 +424,53 @@ fun fetchCounts(db: FirebaseFirestore, itemCounts: MutableState<Map<String, Int>
             itemCounts.value = itemCounts.value.toMutableMap().apply { put("stores", storesCount) }
         }
 }
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun fetchSalesAmounts(db: FirebaseFirestore, salesAmounts: MutableState<Map<String, Double>>) {
+    val now = LocalDateTime.now()
+    val todayStart = now.with(LocalTime.MIN)
+    val weekStart = now.with(ChronoField.DAY_OF_WEEK, 1L).with(LocalTime.MIN)
+    val monthStart = now.withDayOfMonth(1).with(LocalTime.MIN)
+    val yearStart = now.withDayOfYear(1).with(LocalTime.MIN)
+
+    db.collection("Sales").get()
+        .addOnSuccessListener { documents ->
+            var todayTotal = 0.0
+            var weekTotal = 0.0
+            var monthTotal = 0.0
+            var yearTotal = 0.0
+
+            for (document in documents) {
+                val timestamp = document.getTimestamp("date")
+                if (timestamp != null) {
+                    val saleDate = timestamp.toDate().toInstant()
+                        .atZone(ZoneId.systemDefault()).toLocalDateTime()
+                    val amount = document.getDouble("amount") ?: 0.0
+
+                    if (saleDate.isAfter(todayStart)) {
+                        todayTotal += amount
+                    }
+                    if (saleDate.isAfter(weekStart)) {
+                        weekTotal += amount
+                    }
+                    if (saleDate.isAfter(monthStart)) {
+                        monthTotal += amount
+                    }
+                    if (saleDate.isAfter(yearStart)) {
+                        yearTotal += amount
+                    }
+                }
+            }
+
+            salesAmounts.value = salesAmounts.value.toMutableMap().apply {
+                put("today", todayTotal)
+                put("week", weekTotal)
+                put("month", monthTotal)
+                put("year", yearTotal)
+            }
+        }
+}
+
 
 @Composable
 fun Badge(count: Int) {
