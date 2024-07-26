@@ -57,6 +57,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -118,6 +119,8 @@ fun Admin() {
     val scope = rememberCoroutineScope()
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userName = remember { mutableStateOf("Admin") }
+    val itemCounts = remember { mutableStateOf(mapOf<String, Int>()) }
+
 
     LaunchedEffect(currentUser) {
         currentUser?.let { user ->
@@ -133,8 +136,9 @@ fun Admin() {
                         }
                     }
                 }
-                .addOnFailureListener {
-                }
+                .addOnFailureListener {}
+
+            fetchCounts(db, itemCounts)
         }
     }
 
@@ -257,11 +261,6 @@ fun Admin() {
                         Text(text = "Today's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
-                        com.example.pos3.Badge()
-
-
-
-
 
                     }
                     Column(modifier = Modifier
@@ -275,8 +274,7 @@ fun Admin() {
                         Text(text = "Expired Products", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
-                        com.example.pos3.Badge()
-
+                        Badge(count = itemCounts.value["expired"] ?: 0)
                     }
                     Column(modifier = Modifier
                         .weight(0.25f),
@@ -289,7 +287,7 @@ fun Admin() {
                         Text(text = "Products", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
-                        com.example.pos3.Badge()
+                        Badge(count = itemCounts.value["products"] ?: 0)
 
                     }
 
@@ -309,7 +307,7 @@ fun Admin() {
                         Text(text = "Suppliers", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
-                        com.example.pos3.Badge()
+                        Badge(count = itemCounts.value["suppliers"] ?: 0)
 
                     }
                     Column(modifier = Modifier
@@ -323,7 +321,7 @@ fun Admin() {
                         Text(text = "Users", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
-                        com.example.pos3.Badge()
+                        Badge(count = itemCounts.value["users"] ?: 0)
 
                     }
                     Column(modifier = Modifier
@@ -337,7 +335,7 @@ fun Admin() {
                         Text(text = "Week's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
-                        com.example.pos3.Badge()
+
 
                     }
 
@@ -357,7 +355,6 @@ fun Admin() {
                         Text(text = "Month's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
-                        com.example.pos3.Badge()
 
                     }
                     Column(modifier = Modifier
@@ -371,7 +368,6 @@ fun Admin() {
                         Text(text = "Year's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
-                        com.example.pos3.Badge()
 
                     }
                     Column(modifier = Modifier
@@ -385,36 +381,63 @@ fun Admin() {
                         Text(text = "Stores", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp))
-                        com.example.pos3.Badge()
+                        Badge(count = itemCounts.value["stores"] ?: 0)
 
                     }
 
                 }
-
 
             }
         }
     }
 
 }
+fun fetchCounts(db: FirebaseFirestore, itemCounts: MutableState<Map<String, Int>>) {
+    db.collection("Products").whereEqualTo("isExpired", true).get()
+        .addOnSuccessListener { documents ->
+            val expiredCount = documents.size()
+            itemCounts.value = itemCounts.value.toMutableMap().apply { put("expired", expiredCount) }
+        }
+
+    db.collection("Products").get()
+        .addOnSuccessListener { documents ->
+            val productsCount = documents.size()
+            itemCounts.value = itemCounts.value.toMutableMap().apply { put("products", productsCount) }
+        }
+
+    db.collection("Suppliers").get()
+        .addOnSuccessListener { documents ->
+            val suppliersCount = documents.size()
+            itemCounts.value = itemCounts.value.toMutableMap().apply { put("suppliers", suppliersCount) }
+        }
+
+    db.collection("Users").get()
+        .addOnSuccessListener { documents ->
+            val usersCount = documents.size()
+            itemCounts.value = itemCounts.value.toMutableMap().apply { put("users", usersCount) }
+        }
+
+    db.collection("Stores").get()
+        .addOnSuccessListener { documents ->
+            val storesCount = documents.size()
+            itemCounts.value = itemCounts.value.toMutableMap().apply { put("stores", storesCount) }
+        }
+}
 
 @Composable
-fun Badge() {
-    Box(
-        modifier = Modifier
-            .size(14.dp)
-            .clip(CircleShape)
-            .background(color = colorResource(id = R.color.purple_200)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "3",
-            color = Color.White,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.Center)
-
-        )
+fun Badge(count: Int) {
+    if (count > 0) {
+        Box(
+            modifier = Modifier
+                .size(14.dp)
+                .clip(CircleShape)
+                .background(color = colorResource(id = R.color.purple_200)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = count.toString(),
+                color = Color.White,
+                fontSize = 12.sp)
+        }
     }
 }
 
