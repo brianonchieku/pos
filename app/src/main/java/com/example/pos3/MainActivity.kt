@@ -1,10 +1,12 @@
 package com.example.pos3
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -74,9 +76,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -86,6 +92,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Admin() {
@@ -128,6 +135,17 @@ fun Admin() {
                 }
                 .addOnFailureListener {
                 }
+        }
+    }
+
+    var currentDateTime by remember { mutableStateOf(LocalDateTime.now()) }
+    val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy   HH:mm")
+    val formattedDateTime = currentDateTime.format(formatter)
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1000L)
+            currentDateTime = LocalDateTime.now()
         }
     }
 
@@ -186,9 +204,16 @@ fun Admin() {
         }
     }, drawerState=drawerState) {
 
-
         Scaffold(topBar = {
-            TopAppBar(title = { Text(text = "Admin's Dashboard") },
+            TopAppBar(title = {
+                Row(modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(text = "Admin's Dashboard")
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(text = formattedDateTime, fontSize = 18.sp)
+                }
+            },
                 navigationIcon= {
                     IconButton(onClick = {
                         scope.launch {
@@ -211,7 +236,9 @@ fun Admin() {
                         color = colorResource(id = R.color.purple_200),
                         shape = RoundedCornerShape(bottomEnd = 40.dp, bottomStart = 40.dp)
                     ), contentAlignment = Alignment.Center){
-                    Text(text = "Welcome, ${userName.value} ", fontSize = 20.sp)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = "Welcome, ${userName.value} ", fontSize = 20.sp)
+                    }
 
                 }
                 Spacer(modifier = Modifier.size(20.dp))
@@ -399,6 +426,7 @@ data class DrawerItems(
 )
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
