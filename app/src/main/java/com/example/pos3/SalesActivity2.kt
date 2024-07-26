@@ -1,7 +1,9 @@
 package com.example.pos3
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -89,8 +91,6 @@ import java.util.UUID
 class SalesActivity2 : ComponentActivity() {
     private val salesViewModel: SalesViewModel2 by viewModels()
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -110,6 +110,20 @@ fun Sales2(viewModel: SalesViewModel2) {
     var showMPesaDialog by remember { mutableStateOf(false) }
     val context= LocalContext.current
     val subtotal = selectedProducts.sumOf { it.price * it.quantity }
+
+    fun proceedWithSale() {
+        val sale = Sale(
+            transactionId = UUID.randomUUID().toString(),
+            date = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()),
+            amount = subtotal,
+            paymentMethod = paymentMethod,
+            items = selectedProducts,
+            employeeId = FirebaseAuth.getInstance().currentUser?.uid,
+            status = "completed"
+        )
+        viewModel.submitSale(sale, context)
+    }
+
 
 
     Box (modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
@@ -164,13 +178,9 @@ fun Sales2(viewModel: SalesViewModel2) {
             CashDialog2(
                 subtotal = subtotal,
                 onDismiss = { showCashDialog = false },
-                onPayClick = {
-                    viewModel.saveSale(subtotal, "Cash", selectedProducts) {
-                        showCashDialog = false
-                        selectedProducts = listOf()
-                        paymentMethod = ""
-                        Toast.makeText(context, "payment successful", Toast.LENGTH_SHORT).show()
-                    }
+                onPay = {
+                    proceedWithSale()
+                    showCashDialog = false
                 }
             )
         }
@@ -390,34 +400,21 @@ class SalesViewModel2 : ViewModel() {
             }
         }
     }
-    fun saveSale(subtotal: Double, paymentMethod: String, items: List<ProductSale2>, onComplete: () -> Unit) {
+    fun submitSale(sale: Sale, context: Context) {
+        val db = FirebaseFirestore.getInstance()
         viewModelScope.launch {
-            val transactionId = UUID.randomUUID().toString()
-            val employee = FirebaseAuth.getInstance().currentUser?.uid
-            val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault()).format(Date())
-            val sale = Sale(
-                transactionId = transactionId,
-                date = date,
-                amount = subtotal,
-                paymentMethod = paymentMethod,
-                items = items,
-                employeeId = employee,
-                status = "completed"
-            )
-
             try {
-                val db = FirebaseFirestore.getInstance()
-                db.collection("Sales").document(transactionId).set(sale).await()
-                onComplete()
+                db.collection("Sales").add(sale).await()
+                Toast.makeText(context, "Sale submitted successfully", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                // Handle the error
+                Toast.makeText(context, "Error submitting sale: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
 }
 
 @Composable
-fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double, onPayClick: () -> Unit){
+fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double,  onPay: () -> Unit){
     var cashGiven by remember {mutableStateOf("") }
     var change by remember {mutableStateOf("") }
 
@@ -459,7 +456,7 @@ fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double, onPayClick: () -> Unit
                     TextButton(onClick = onDismiss) {
                         Text("Cancel", color = colorResource(id = R.color.purple_200))
                     }
-                    TextButton(onClick = { onPayClick }) {
+                    TextButton(onClick = onPay) {
                         Text("Pay", color = colorResource(id = R.color.purple_500))
                     }
                 }
@@ -512,6 +509,33 @@ fun MPesaDialog(onDismiss: () -> Unit, subtotal: Double) {
         }
     }
 }
+
+suspend fun addSaleToFirestore(sale: Sale, context: Context) {
+    val db = FirebaseFirestore.getInstance()
+    val currentTimestamp = com.google.firebase.Timestamp(java.util.Date())
+
+
+    val productData = hashMapOf(
+        "transaction_id" to sale.transactionId,
+        "date" to currentTimestamp,
+        "amount" to sale.amount,
+        "paymentMethod" to sale.paymentMethod,
+        "items" to sale.items,
+        "cashier_name" to sale.employeeId
+    )
+
+    db.collection("Sales")
+        .add(productData)
+        .addOnSuccessListener {
+            Log.d("Firestore", "DocumentSnapshot successfully written!")
+            Toast.makeText(context, "Added successfully", Toast.LENGTH_SHORT).show()
+        }
+        .addOnFailureListener { e ->
+            Log.w("Firestore", "Error writing document", e)
+            Toast.makeText(context, "Error adding product: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+}
+
 
 data class ProductSale2(
     val name: String,
