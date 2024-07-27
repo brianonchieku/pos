@@ -84,6 +84,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
 import java.time.LocalTime
+import java.time.format.DateTimeParseException
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -441,10 +442,20 @@ fun fetchSalesAmounts(db: FirebaseFirestore, salesAmounts: MutableState<Map<Stri
             var yearTotal = 0.0
 
             for (document in documents) {
-                val timestamp = document.getTimestamp("date")
-                if (timestamp != null) {
-                    val saleDate = timestamp.toDate().toInstant()
+                val timestamp = document.get("date")
+                val saleDate = when (timestamp) {
+                    is com.google.firebase.Timestamp -> timestamp.toDate().toInstant()
                         .atZone(ZoneId.systemDefault()).toLocalDateTime()
+                    is String -> {
+                        try {
+                            LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                        } catch (e: DateTimeParseException) {
+                            null
+                        }
+                    }
+                    else -> null
+                }
+                if (saleDate != null) {
                     val amount = document.getDouble("amount") ?: 0.0
 
                     if (saleDate.isAfter(todayStart)) {
