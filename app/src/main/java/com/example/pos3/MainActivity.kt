@@ -113,8 +113,8 @@ fun Admin() {
     )
 
     val context = LocalContext.current
-    var selectedItem by remember{ mutableStateOf(drawerItem[0]) }
-    val drawerState= rememberDrawerState(initialValue = DrawerValue.Closed)
+    var selectedItem by remember { mutableStateOf(drawerItem[0]) }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userName = remember { mutableStateOf("Admin") }
@@ -157,45 +157,39 @@ fun Admin() {
 
 
     ModalNavigationDrawer(drawerContent = {
-        ModalDrawerSheet(modifier = Modifier
-            .fillMaxWidth(0.75f)
-            .padding(top = 90.dp)) {
-            Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ModalDrawerSheet(
+            modifier = Modifier
+                .fillMaxWidth(0.75f)
+                .padding(top = 90.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Spacer(modifier = Modifier.size(10.dp))
                 drawerItem.forEach {
-                    NavigationDrawerItem(label = { Text(text = it.text) }
-                        , selected = it==selectedItem,
+                    NavigationDrawerItem(label = { Text(text = it.text) },
+                        selected = it == selectedItem,
                         onClick = {
-                            selectedItem=it
-                            scope.launch{
+                            selectedItem = it
+                            scope.launch {
                                 drawerState.close()
                             }
-                            if(it.text=="users"){
-                                val intent= Intent(context, UsersActivity::class.java)
-                                context.startActivity(intent)
+                            when (it.text) {
+                                "users" -> context.startActivity(Intent(context, UsersActivity::class.java))
+                                "suppliers" -> context.startActivity(Intent(context, SupplierActivity::class.java))
+                                "products" -> context.startActivity(Intent(context, ProductsActivity::class.java))
+                                "POS" -> context.startActivity(Intent(context, SalesActivity2::class.java))
                             }
-                            if(it.text=="suppliers"){
-                                val intent= Intent(context, SupplierActivity::class.java)
-                                context.startActivity(intent)
-                            }
-                            if(it.text=="products"){
-                                val intent= Intent(context, ProductsActivity::class.java)
-                                context.startActivity(intent)
-                            }
-                            if(it.text=="POS"){
-                                val intent= Intent(context, SalesActivity2::class.java)
-                                context.startActivity(intent)
-                            }
-
                         },
                         modifier = Modifier.padding(horizontal = 20.dp),
                         icon = {
                             Icon(imageVector = it.icon, contentDescription = it.text)
                         },
                         badge = {
-                            if(it.hasBadge){
+                            if (it.hasBadge) {
                                 BadgedBox(badge = {}) {
-                                    Badge{
+                                    Badge {
                                         Text(text = it.badgeCount.toString())
                                     }
                                 }
@@ -205,19 +199,22 @@ fun Admin() {
 
             }
         }
-    }, drawerState=drawerState) {
+    }, drawerState = drawerState) {
 
         Scaffold(topBar = {
-            TopAppBar(title = {
-                Row(modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = "Admin's Dashboard")
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(text = formattedDateTime, fontSize = 18.sp)
-                }
-            },
-                navigationIcon= {
+            TopAppBar(
+                title = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = "Admin's Dashboard")
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(text = formattedDateTime, fontSize = 18.sp)
+                    }
+                },
+                navigationIcon = {
                     IconButton(onClick = {
                         scope.launch {
                             drawerState.open()
@@ -225,177 +222,251 @@ fun Admin() {
                     }) {
                         Icon(imageVector = Icons.Default.Menu, contentDescription = "Menu")
                     }
-                },  colors = TopAppBarDefaults.topAppBarColors(
+                }, colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = colorResource(id = R.color.purple_200)
-                ))
+                )
+            )
         }) {
-            Column(modifier = Modifier
-                .fillMaxSize()
-                .padding(it), horizontalAlignment = Alignment.CenterHorizontally) {
-                Box (modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-                    .background(
-                        color = colorResource(id = R.color.purple_200),
-                        shape = RoundedCornerShape(bottomEnd = 40.dp, bottomStart = 40.dp)
-                    ), contentAlignment = Alignment.Center){
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(it), horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp)
+                        .background(
+                            color = colorResource(id = R.color.purple_200),
+                            shape = RoundedCornerShape(bottomEnd = 40.dp, bottomStart = 40.dp)
+                        ), contentAlignment = Alignment.Center
+                ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(text = "Welcome, ${userName.value} ", fontSize = 20.sp)
                     }
 
                 }
                 Spacer(modifier = Modifier.size(20.dp))
-                Row (modifier = Modifier
-                    .padding(top = 24.dp, start = 16.dp, end = 16.dp)
-                    .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center){
-                    Column(modifier = Modifier
-                        .weight(0.25f),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painter = painterResource(id = R.drawable.baseline_stacked_bar_chart_24), contentDescription =null,
+                Row(
+                    modifier = Modifier
+                        .padding(top = 24.dp, start = 16.dp, end = 16.dp)
+                        .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_stacked_bar_chart_24),
+                            contentDescription = null,
                             modifier = Modifier
                                 .padding(top = 8.dp, bottom = 4.dp)
                                 .background(color = Color.White, shape = RoundedCornerShape(10.dp))
-                                .padding(16.dp))
-                        Text(text = "Today's sales", fontSize = 14.sp,
+                                .padding(16.dp)
+                        )
+                        Text(
+                            text = "Today's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp))
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                         Text(text = "Kshs ${salesAmounts.value["today"] ?: 0.0}", fontSize = 14.sp)
                     }
-
-                    }
-                    Column(modifier = Modifier
-                        .weight(0.25f),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painter = painterResource(id = R.drawable.baseline_warning_24), contentDescription =null,
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_warning_24),
+                            contentDescription = null,
                             modifier = Modifier
                                 .padding(top = 8.dp, bottom = 4.dp)
                                 .background(color = Color.White, shape = RoundedCornerShape(10.dp))
-                                .padding(16.dp))
-                        Text(text = "Expired Products", fontSize = 14.sp,
+                                .padding(16.dp)
+                        )
+                        Text(
+                            text = "Expired Products", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp))
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                         Badge(count = itemCounts.value["expired"] ?: 0)
                     }
-                    Column(modifier = Modifier
-                        .weight(0.25f),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painter = painterResource(id = R.drawable.baseline_shopping_cart_24), contentDescription =null,
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_shopping_cart_24),
+                            contentDescription = null,
                             modifier = Modifier
                                 .padding(top = 8.dp, bottom = 4.dp)
                                 .background(color = Color.White, shape = RoundedCornerShape(10.dp))
-                                .padding(16.dp))
-                        Text(text = "Products", fontSize = 14.sp,
+                                .padding(16.dp)
+                        )
+                        Text(
+                            text = "Products", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp))
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                         Badge(count = itemCounts.value["products"] ?: 0)
 
                     }
 
                 }
-                Row (modifier = Modifier
-                    .padding(top = 24.dp, start = 16.dp, end = 16.dp)
-                    .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center){
-                    Column(modifier = Modifier
-                        .weight(0.25f),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painter = painterResource(id = R.drawable.baseline_people_24), contentDescription =null,
+                Row(
+                    modifier = Modifier
+                        .padding(top = 24.dp, start = 16.dp, end = 16.dp)
+                        .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_people_24),
+                            contentDescription = null,
                             modifier = Modifier
                                 .padding(top = 8.dp, bottom = 4.dp)
                                 .background(color = Color.White, shape = RoundedCornerShape(10.dp))
-                                .padding(16.dp))
-                        Text(text = "Suppliers", fontSize = 14.sp,
+                                .padding(16.dp)
+                        )
+                        Text(
+                            text = "Suppliers", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp))
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                         Badge(count = itemCounts.value["suppliers"] ?: 0)
 
                     }
-                    Column(modifier = Modifier
-                        .weight(0.25f),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painter = painterResource(id = R.drawable.baseline_person_24), contentDescription =null,
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_person_24),
+                            contentDescription = null,
                             modifier = Modifier
                                 .padding(top = 8.dp, bottom = 4.dp)
                                 .background(color = Color.White, shape = RoundedCornerShape(10.dp))
-                                .padding(16.dp))
-                        Text(text = "Users", fontSize = 14.sp,
+                                .padding(16.dp)
+                        )
+                        Text(
+                            text = "Users", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp))
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                         Badge(count = itemCounts.value["users"] ?: 0)
 
                     }
-                    Column(modifier = Modifier
-                        .weight(0.25f),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painter = painterResource(id = R.drawable.baseline_stacked_bar_chart_24), contentDescription =null,
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_stacked_bar_chart_24),
+                            contentDescription = null,
                             modifier = Modifier
                                 .padding(top = 8.dp, bottom = 4.dp)
                                 .background(color = Color.White, shape = RoundedCornerShape(10.dp))
-                                .padding(16.dp))
-                        Text(text = "Week's sales", fontSize = 14.sp,
+                                .padding(16.dp)
+                        )
+                        Text(
+                            text = "Week's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp))
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                         Text(text = "Kshs ${salesAmounts.value["week"] ?: 0.0}", fontSize = 14.sp)
 
 
                     }
 
                 }
-                Row (modifier = Modifier
-                    .padding(top = 24.dp, start = 16.dp, end = 16.dp)
-                    .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center){
-                    Column(modifier = Modifier
-                        .weight(0.25f),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painter = painterResource(id = R.drawable.baseline_stacked_bar_chart_24), contentDescription =null,
+                Row(
+                    modifier = Modifier
+                        .padding(top = 24.dp, start = 16.dp, end = 16.dp)
+                        .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_stacked_bar_chart_24),
+                            contentDescription = null,
                             modifier = Modifier
                                 .padding(top = 8.dp, bottom = 4.dp)
                                 .background(color = Color.White, shape = RoundedCornerShape(10.dp))
-                                .padding(16.dp))
-                        Text(text = "Month's sales", fontSize = 14.sp,
+                                .padding(16.dp)
+                        )
+                        Text(
+                            text = "Month's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp))
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                         Text(text = "Kshs ${salesAmounts.value["month"] ?: 0.0}", fontSize = 14.sp)
 
                     }
-                    Column(modifier = Modifier
-                        .weight(0.25f),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painter = painterResource(id = R.drawable.baseline_stacked_bar_chart_24), contentDescription =null,
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_stacked_bar_chart_24),
+                            contentDescription = null,
                             modifier = Modifier
                                 .padding(top = 8.dp, bottom = 4.dp)
                                 .background(color = Color.White, shape = RoundedCornerShape(10.dp))
-                                .padding(16.dp))
-                        Text(text = "Year's sales", fontSize = 14.sp,
+                                .padding(16.dp)
+                        )
+                        Text(
+                            text = "Year's sales", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp))
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                         Text(text = "Kshs ${salesAmounts.value["year"] ?: 0.0}", fontSize = 14.sp)
 
                     }
-                    Column(modifier = Modifier
-                        .weight(0.25f),
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(painter = painterResource(id = R.drawable.baseline_warehouse_24), contentDescription =null,
+                    Column(
+                        modifier = Modifier
+                            .weight(0.25f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_warehouse_24),
+                            contentDescription = null,
                             modifier = Modifier
                                 .padding(top = 8.dp, bottom = 4.dp)
                                 .background(color = Color.White, shape = RoundedCornerShape(10.dp))
-                                .padding(16.dp))
-                        Text(text = "Stores", fontSize = 14.sp,
+                                .padding(16.dp)
+                        )
+                        Text(
+                            text = "Stores", fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp))
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                         Badge(count = itemCounts.value["stores"] ?: 0)
                     }
 
                 }
-
             }
         }
     }
+}
 
 fun fetchCounts(db: FirebaseFirestore, itemCounts: MutableState<Map<String, Int>>) {
-    db.collection("Products").whereEqualTo("isExpired", true).get()
+    val now = com.google.firebase.Timestamp.now()
+
+    db.collection("Products").whereLessThanOrEqualTo("ExpiryDate", now).get()
         .addOnSuccessListener { documents ->
             val expiredCount = documents.size()
             itemCounts.value = itemCounts.value.toMutableMap().apply { put("expired", expiredCount) }
@@ -448,11 +519,15 @@ fun fetchSalesAmounts(db: FirebaseFirestore, salesAmounts: MutableState<Map<Stri
                         .atZone(ZoneId.systemDefault()).toLocalDateTime()
                     is String -> {
                         try {
-                            LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                            LocalDateTime.parse(
+                                timestamp,
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                            )
                         } catch (e: DateTimeParseException) {
                             null
                         }
                     }
+
                     else -> null
                 }
                 if (saleDate != null) {
