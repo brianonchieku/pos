@@ -1,5 +1,6 @@
 package com.example.pos3
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -180,7 +181,13 @@ fun Admin() {
                                 "suppliers" -> context.startActivity(Intent(context, SupplierActivity::class.java))
                                 "products" -> context.startActivity(Intent(context, ProductsActivity::class.java))
                                 "POS" -> context.startActivity(Intent(context, SalesActivity2::class.java))
-                                "logout" -> FirebaseAuth.getInstance().signOut()
+                                "logout" -> {
+                                    FirebaseAuth.getInstance().signOut()
+                                    val intent = Intent(context, LoginActivity::class.java)
+                                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                    context.startActivity(intent)
+                                    (context as Activity).finish()
+                                }
                             }
                         },
                         modifier = Modifier.padding(horizontal = 20.dp),
