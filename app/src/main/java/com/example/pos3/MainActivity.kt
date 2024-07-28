@@ -21,31 +21,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Place
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
@@ -68,7 +49,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -103,14 +83,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Admin() {
     val drawerItem = listOf(
-        DrawerItems(Icons.Default.Home, "stores"),
-        DrawerItems(Icons.Filled.AccountCircle, "users"),
-        DrawerItems(Icons.Filled.Place, "suppliers"),
-        DrawerItems(Icons.Filled.ShoppingCart, "products"),
-        DrawerItems(Icons.Filled.Search, "POS"),
-        DrawerItems(Icons.Filled.MoreVert, "reports"),
-        DrawerItems(Icons.Filled.Warning, "expired"),
-        DrawerItems(Icons.Filled.KeyboardArrowLeft, "logout"),
+        DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_warehouse_24), contentDescription = null) }, "stores"),
+        DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_person_24), contentDescription = null ) }, "users"),
+        DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_people_24), contentDescription = null ) }, "suppliers"),
+        DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_shopping_cart_24), contentDescription = null ) }, "products"),
+        DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_shopping_cart_24), contentDescription = null ) }, "POS"),
+        DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_file_copy_24), contentDescription = null ) }, "reports"),
+        DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_warning_24), contentDescription = null ) }, "expired"),
+        DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_arrow_back_ios_24), contentDescription = null ) }, "logout"),
     )
 
     val context = LocalContext.current
@@ -191,9 +171,8 @@ fun Admin() {
                             }
                         },
                         modifier = Modifier.padding(horizontal = 20.dp),
-                        icon = {
-                            Icon(imageVector = it.icon, contentDescription = it.text)
-                        })
+                        icon = it.icon
+                        )
                 }
 
             }
@@ -273,7 +252,10 @@ fun Admin() {
                         Box(
                             modifier = Modifier
                                 .wrapContentSize()
-                                .background(colorResource(id = R.color.purple_200), shape = RoundedCornerShape(10.dp))
+                                .background(
+                                    colorResource(id = R.color.purple_200),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
                                 .padding(4.dp)
                         ) {
                             Text(
@@ -394,7 +376,10 @@ fun Admin() {
                         )
                         Box(
                             modifier = Modifier
-                                .background(colorResource(id = R.color.purple_200), shape = RoundedCornerShape(10.dp))
+                                .background(
+                                    colorResource(id = R.color.purple_200),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
                                 .padding(4.dp)
                         ) {
                             Text(
@@ -432,7 +417,10 @@ fun Admin() {
                         )
                         Box(
                             modifier = Modifier
-                                .background(colorResource(id = R.color.purple_200), shape = RoundedCornerShape(10.dp))
+                                .background(
+                                    colorResource(id = R.color.purple_200),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
                                 .padding(4.dp)
                         ) {
                             Text(
@@ -463,7 +451,10 @@ fun Admin() {
                         )
                         Box(
                             modifier = Modifier
-                                .background(colorResource(id = R.color.purple_200), shape = RoundedCornerShape(10.dp))
+                                .background(
+                                    colorResource(id = R.color.purple_200),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
                                 .padding(4.dp)
                         ) {
                             Text(
@@ -614,7 +605,7 @@ fun Badge(count: Int) {
 }
 
 data class DrawerItems(
-    val icon: ImageVector,
+    val icon: @Composable () -> Unit,
     val text: String
 )
 
