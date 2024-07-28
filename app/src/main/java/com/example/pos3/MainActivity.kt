@@ -102,14 +102,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Admin() {
     val drawerItem = listOf(
-        DrawerItems(Icons.Default.Home, "stores", 0, false),
-        DrawerItems(Icons.Filled.AccountCircle, "users", 2, true),
-        DrawerItems(Icons.Filled.Place, "suppliers", 20, true),
-        DrawerItems(Icons.Filled.ShoppingCart, "products", 2, true),
-        DrawerItems(Icons.Filled.Search, "POS", 2, true),
-        DrawerItems(Icons.Filled.MoreVert, "reports", 2, true),
-        DrawerItems(Icons.Filled.Warning, "expired", 2, true),
-        DrawerItems(Icons.Filled.KeyboardArrowLeft, "logout", 2, true),
+        DrawerItems(Icons.Default.Home, "stores"),
+        DrawerItems(Icons.Filled.AccountCircle, "users"),
+        DrawerItems(Icons.Filled.Place, "suppliers"),
+        DrawerItems(Icons.Filled.ShoppingCart, "products"),
+        DrawerItems(Icons.Filled.Search, "POS"),
+        DrawerItems(Icons.Filled.MoreVert, "reports"),
+        DrawerItems(Icons.Filled.Warning, "expired"),
+        DrawerItems(Icons.Filled.KeyboardArrowLeft, "logout"),
     )
 
     val context = LocalContext.current
@@ -180,20 +180,12 @@ fun Admin() {
                                 "suppliers" -> context.startActivity(Intent(context, SupplierActivity::class.java))
                                 "products" -> context.startActivity(Intent(context, ProductsActivity::class.java))
                                 "POS" -> context.startActivity(Intent(context, SalesActivity2::class.java))
+                                "logout" -> FirebaseAuth.getInstance().signOut()
                             }
                         },
                         modifier = Modifier.padding(horizontal = 20.dp),
                         icon = {
                             Icon(imageVector = it.icon, contentDescription = it.text)
-                        },
-                        badge = {
-                            if (it.hasBadge) {
-                                BadgedBox(badge = {}) {
-                                    Badge {
-                                        Text(text = it.badgeCount.toString())
-                                    }
-                                }
-                            }
                         })
                 }
 
@@ -211,7 +203,7 @@ fun Admin() {
                     ) {
                         Text(text = "Admin's Dashboard")
                         Spacer(modifier = Modifier.weight(1f))
-                        Text(text = formattedDateTime, fontSize = 18.sp)
+                        Text(text = formattedDateTime, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
                 },
                 navigationIcon = {
@@ -271,7 +263,18 @@ fun Admin() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        Text(text = "Kshs ${salesAmounts.value["today"] ?: 0.0}", fontSize = 14.sp)
+                        Box(
+                            modifier = Modifier
+                                .wrapContentSize()
+                                .background(colorResource(id = R.color.purple_200), shape = RoundedCornerShape(10.dp))
+                                .padding(4.dp)
+                        ) {
+                            Text(
+                                text = "Kshs ${salesAmounts.value["today"] ?: 0.0}",
+                                fontSize = 14.sp,
+                                color = Color.White
+                            )
+                        }
                     }
                     Column(
                         modifier = Modifier
@@ -382,9 +385,17 @@ fun Admin() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        Text(text = "Kshs ${salesAmounts.value["week"] ?: 0.0}", fontSize = 14.sp)
-
-
+                        Box(
+                            modifier = Modifier
+                                .background(colorResource(id = R.color.purple_200), shape = RoundedCornerShape(10.dp))
+                                .padding(4.dp)
+                        ) {
+                            Text(
+                                text = "Kshs ${salesAmounts.value["week"] ?: 0.0}",
+                                fontSize = 14.sp,
+                                color = Color.White
+                            )
+                        }
                     }
 
                 }
@@ -412,7 +423,17 @@ fun Admin() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        Text(text = "Kshs ${salesAmounts.value["month"] ?: 0.0}", fontSize = 14.sp)
+                        Box(
+                            modifier = Modifier
+                                .background(colorResource(id = R.color.purple_200), shape = RoundedCornerShape(10.dp))
+                                .padding(4.dp)
+                        ) {
+                            Text(
+                                text = "Kshs ${salesAmounts.value["month"] ?: 0.0}",
+                                fontSize = 14.sp,
+                                color = Color.White
+                            )
+                        }
 
                     }
                     Column(
@@ -433,7 +454,17 @@ fun Admin() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        Text(text = "Kshs ${salesAmounts.value["year"] ?: 0.0}", fontSize = 14.sp)
+                        Box(
+                            modifier = Modifier
+                                .background(colorResource(id = R.color.purple_200), shape = RoundedCornerShape(10.dp))
+                                .padding(4.dp)
+                        ) {
+                            Text(
+                                text = "Kshs ${salesAmounts.value["year"] ?: 0.0}",
+                                fontSize = 14.sp,
+                                color = Color.White
+                            )
+                        }
 
                     }
                     Column(
@@ -577,9 +608,7 @@ fun Badge(count: Int) {
 
 data class DrawerItems(
     val icon: ImageVector,
-    val text: String,
-    val badgeCount: Int,
-    val hasBadge: Boolean
+    val text: String
 )
 
 
