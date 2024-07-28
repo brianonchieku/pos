@@ -405,6 +405,7 @@ class SalesViewModel2 : ViewModel() {
         viewModelScope.launch {
             try {
                 db.collection("Sales").add(sale).await()
+                updateProductQuantities(sale)
                 Toast.makeText(context, "Sale submitted successfully", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(context, "Error submitting sale: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -514,7 +515,6 @@ suspend fun addSaleToFirestore(sale: Sale, context: Context) {
     val db = FirebaseFirestore.getInstance()
     val currentTimestamp = com.google.firebase.Timestamp(java.util.Date())
 
-
     val productData = hashMapOf(
         "transaction_id" to sale.transactionId,
         "date" to currentTimestamp,
@@ -536,11 +536,34 @@ suspend fun addSaleToFirestore(sale: Sale, context: Context) {
         }
 }
 
+suspend fun updateProductQuantities(sale: Sale) {
+    val db = FirebaseFirestore.getInstance()
+
+    sale.items.forEach { productSale ->
+        val productRef = db.collection("Products").document(productSale.name)
+
+        // Fetch the current quantity
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(productRef)
+            val currentQuantity = snapshot.getLong("Quantity") ?: 0L
+            val newQuantity = currentQuantity - productSale.quantity
+
+            // Update the quantity
+            transaction.update(productRef, "Quantity", newQuantity)
+        }.addOnSuccessListener {
+            Log.d("Firestore", "Product quantity successfully updated!")
+        }.addOnFailureListener { e ->
+            Log.w("Firestore", "Error updating product quantity", e)
+        }
+    }
+}
+
 
 data class ProductSale2(
     val name: String,
     val price: Double,
     val quantity: Int = 1)
+
 
 data class Sale(
     val transactionId: String,
