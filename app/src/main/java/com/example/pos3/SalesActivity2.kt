@@ -104,12 +104,15 @@ class SalesActivity2 : ComponentActivity() {
 @Composable
 fun Sales2(viewModel: SalesViewModel2) {
     val products by viewModel.products.collectAsState()
+    val employeeName by viewModel.employeeName.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var selectedProducts by remember { mutableStateOf(products) }
     var paymentMethod by remember { mutableStateOf("") }
     var showCashDialog by remember { mutableStateOf(false) }
     var showMPesaDialog by remember { mutableStateOf(false) }
     var showReceiptDialog by remember { mutableStateOf(false) }
+    var amountReceived by remember { mutableStateOf(0.0) }
+    var change by remember { mutableStateOf(0.0) }
     val context= LocalContext.current
     val subtotal = selectedProducts.sumOf { it.price * it.quantity }
 
@@ -121,6 +124,7 @@ fun Sales2(viewModel: SalesViewModel2) {
             paymentMethod = paymentMethod,
             items = selectedProducts,
             employeeId = FirebaseAuth.getInstance().currentUser?.uid,
+            employeeName = employeeName,
             status = "completed"
         )
         viewModel.submitSale(sale, context)
@@ -179,12 +183,15 @@ fun Sales2(viewModel: SalesViewModel2) {
             CashDialog2(
                 subtotal = subtotal,
                 onDismiss = { showCashDialog = false },
-                onPay = {
+                onPay = { received ->
+                    amountReceived = received
+                    change = received - subtotal
                     proceedWithSale()
                     showCashDialog = false
                 }
             )
         }
+
         if (showMPesaDialog) {
             MPesaDialog(
                 subtotal = subtotal,
@@ -201,11 +208,14 @@ fun Sales2(viewModel: SalesViewModel2) {
                     paymentMethod = paymentMethod,
                     items = selectedProducts,
                     employeeId = FirebaseAuth.getInstance().currentUser?.uid,
+                    employeeName = employeeName,
                     status = "completed"
                 ),
                 products = selectedProducts,
                 subtotal = subtotal,
-                paymentMethod = paymentMethod
+                paymentMethod = paymentMethod,
+                amountReceived = amountReceived,
+                change = change
             )
         }
     }
@@ -395,8 +405,12 @@ class SalesViewModel2 : ViewModel() {
     private val _products = MutableStateFlow(listOf<ProductSale2>())
     val products: StateFlow<List<ProductSale2>> = _products
 
+    private val _employeeName = MutableStateFlow<String?>(null)
+    val employeeName: StateFlow<String?> = _employeeName
+
     init {
         fetchProducts()
+        fetchEmployeeName()
     }
 
     private fun fetchProducts() {
@@ -429,10 +443,26 @@ class SalesViewModel2 : ViewModel() {
             }
         }
     }
+    private fun fetchEmployeeName() {
+        viewModelScope.launch {
+            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+            val db = FirebaseFirestore.getInstance()
+
+            try {
+                val userSnapshot = db.collection("Users").document(userId).get().await()
+                val name = userSnapshot.getString("Name")
+                _employeeName.value = name
+            } catch (e: Exception) {
+                // Handle the error
+            }
+        }
+    }
 }
 
 @Composable
-fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double,  onPay: () -> Unit){
+fun CashDialog2(onDismiss: () -> Unit,
+                subtotal: Double,
+                onPay: (amountReceived: Double) -> Unit){
     var cashGiven by remember {mutableStateOf("") }
     var change by remember {mutableStateOf("") }
     val context = LocalContext.current
@@ -478,7 +508,8 @@ fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double,  onPay: () -> Unit){
                     TextButton(onClick = {
                         val changeAmount = change.toDoubleOrNull() ?: 0.0
                         if (changeAmount >= 0) {
-                            onPay()
+                            val received = cashGiven.toDoubleOrNull() ?: 0.0
+                            onPay(received)
                         } else {
                             Toast.makeText(context, "Insufficient funds", Toast.LENGTH_SHORT).show()
                         }
@@ -567,9 +598,11 @@ fun ReceiptDialog(
     sale: Sale,
     products: List<ProductSale2>,
     subtotal: Double,
-    paymentMethod: String
+    paymentMethod: String,
+    amountReceived: Double,
+    change: Double
 ) {
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(onDismissRequest = {} ) {
         Card(
             modifier = Modifier.padding(16.dp)
         ) {
@@ -581,14 +614,14 @@ fun ReceiptDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(text = "FRESHMART SUPERMARKET", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Spacer(modifier = Modifier.size(10.dp))
-                Text(text = "00010014 Nairobi", fontSize = 18.sp)
-                Text(text = "+254712345678", fontSize = 18.sp)
-                Text(text = "freshmart@gmail.com", fontSize = 18.sp)
+                Spacer(modifier = Modifier.size(7.dp))
+                Text(text = "00010014 Nairobi")
+                Text(text = "+254712345678")
+                Text(text = "freshmart@gmail.com")
                 Spacer(modifier = Modifier.size(20.dp))
                 Text(text = "Sales Receipt", fontWeight = FontWeight.Bold, fontSize = 25.sp)
-                Text(text = "Date: ${sale.date}", fontSize = 18.sp)
-                Text(text = "Receipt no: ${sale.transactionId}", fontSize = 18.sp)
+                Text(text = "Date: ${sale.date}", fontSize = 13.sp)
+                Text(text = "Receipt no: ${sale.transactionId}", fontSize = 10.sp)
                 Spacer(modifier = Modifier.size(15.dp))
                 val tableHeaders = listOf("Name", "Quantity", "Price", "Total")
 
@@ -639,38 +672,27 @@ fun ReceiptDialog(
                     Divider(color = Color.Gray, thickness = 0.5.dp)
                 }
 
-                // Subtotal and Payment Method
-                Row(modifier = Modifier.padding(vertical = 8.dp)) {
-                    Spacer(modifier = Modifier.weight(2f))
-                    Text(
-                        text = "Subtotal: ",
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(8.dp),
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = subtotal.toString(),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(8.dp),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
                 Spacer(modifier = Modifier.size(16.dp))
-                Column(horizontalAlignment = AbsoluteAlignment.Left) {
-                    Text(
-                        text = "Payment Method: $paymentMethod",
-                        modifier = Modifier.padding(8.dp),
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.size(16.dp))
-                    Text(text = "Amount Paid: $")
-                    Text(text = "Change: $")
-                    Spacer(modifier = Modifier.size(10.dp))
-                    Text(text = "You were served by: ", fontSize = 11.sp)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        Text(
+                            text = "Subtotal: ${subtotal.toString()}",
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Payment Method: $paymentMethod",
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.size(10.dp))
+                        Text(text = "Amount Paid:   $amountReceived")
+                        Text(text = "Change:         $change")
+                        Spacer(modifier = Modifier.size(10.dp))
+                        Text(
+                            text = "You were served by:  ${sale.employeeName ?: "Unknown"} ",
+                            fontSize = 11.sp
+                        )
+                    }
                 }
-
                 Spacer(modifier = Modifier.size(10.dp))
                 Row(
                     horizontalArrangement = Arrangement.End,
@@ -680,7 +702,7 @@ fun ReceiptDialog(
                         Text("Close", color = colorResource(id = R.color.purple_200))
                     }
                     TextButton(onClick = {}) {
-                        Text("Generate", color = colorResource(id = R.color.purple_200))
+                        Text("Generate", color = colorResource(id = R.color.purple_500))
                     }
                 }
             }
@@ -706,6 +728,7 @@ data class Sale(
     val paymentMethod: String,
     val items: List<ProductSale2>,
     val employeeId: String?,
+    val employeeName: String?,
     val status: String
 )
 
