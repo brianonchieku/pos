@@ -51,6 +51,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -108,6 +109,7 @@ fun Sales2(viewModel: SalesViewModel2) {
     var paymentMethod by remember { mutableStateOf("") }
     var showCashDialog by remember { mutableStateOf(false) }
     var showMPesaDialog by remember { mutableStateOf(false) }
+    var showReceiptDialog by remember { mutableStateOf(false) }
     val context= LocalContext.current
     val subtotal = selectedProducts.sumOf { it.price * it.quantity }
 
@@ -122,9 +124,8 @@ fun Sales2(viewModel: SalesViewModel2) {
             status = "completed"
         )
         viewModel.submitSale(sale, context)
+        showReceiptDialog = true
     }
-
-
 
     Box (modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
         Column(
@@ -188,6 +189,23 @@ fun Sales2(viewModel: SalesViewModel2) {
             MPesaDialog(
                 subtotal = subtotal,
                 onDismiss = { showMPesaDialog = false }
+            )
+        }
+        if (showReceiptDialog) {
+            ReceiptDialog(
+                onDismiss = { showReceiptDialog = false },
+                sale = Sale(
+                    transactionId = UUID.randomUUID().toString(),
+                    date = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()),
+                    amount = subtotal,
+                    paymentMethod = paymentMethod,
+                    items = selectedProducts,
+                    employeeId = FirebaseAuth.getInstance().currentUser?.uid,
+                    status = "completed"
+                ),
+                products = selectedProducts,
+                subtotal = subtotal,
+                paymentMethod = paymentMethod
             )
         }
     }
@@ -405,7 +423,6 @@ class SalesViewModel2 : ViewModel() {
         viewModelScope.launch {
             try {
                 db.collection("Sales").add(sale).await()
-                updateProductQuantities(sale)
                 Toast.makeText(context, "Sale submitted successfully", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 Toast.makeText(context, "Error submitting sale: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -418,6 +435,7 @@ class SalesViewModel2 : ViewModel() {
 fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double,  onPay: () -> Unit){
     var cashGiven by remember {mutableStateOf("") }
     var change by remember {mutableStateOf("") }
+    val context = LocalContext.current
 
     LaunchedEffect(cashGiven) {
         val cashGivenValue = cashGiven.toDoubleOrNull() ?: 0.0
@@ -436,7 +454,7 @@ fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double,  onPay: () -> Unit){
                 Spacer(modifier = Modifier.size(10.dp))
                 OutlinedTextField(value = cashGiven,
                     onValueChange ={ cashGiven=it},
-                    label = { Text("Cash Given")},
+                    label = { Text("Amount Received")},
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 Spacer(modifier = Modifier.size(10.dp))
@@ -457,7 +475,14 @@ fun CashDialog2(onDismiss: () -> Unit,  subtotal: Double,  onPay: () -> Unit){
                     TextButton(onClick = onDismiss) {
                         Text("Cancel", color = colorResource(id = R.color.purple_200))
                     }
-                    TextButton(onClick = onPay) {
+                    TextButton(onClick = {
+                        val changeAmount = change.toDoubleOrNull() ?: 0.0
+                        if (changeAmount >= 0) {
+                            onPay()
+                        } else {
+                            Toast.makeText(context, "Insufficient funds", Toast.LENGTH_SHORT).show()
+                        }
+                    }) {
                         Text("Pay", color = colorResource(id = R.color.purple_500))
                     }
                 }
@@ -536,27 +561,136 @@ suspend fun addSaleToFirestore(sale: Sale, context: Context) {
         }
 }
 
-suspend fun updateProductQuantities(sale: Sale) {
-    val db = FirebaseFirestore.getInstance()
+@Composable
+fun ReceiptDialog(
+    onDismiss: () -> Unit,
+    sale: Sale,
+    products: List<ProductSale2>,
+    subtotal: Double,
+    paymentMethod: String
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .wrapContentSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "FRESHMART SUPERMARKET", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Spacer(modifier = Modifier.size(10.dp))
+                Text(text = "00010014 Nairobi", fontSize = 18.sp)
+                Text(text = "+254712345678", fontSize = 18.sp)
+                Text(text = "freshmart@gmail.com", fontSize = 18.sp)
+                Spacer(modifier = Modifier.size(20.dp))
+                Text(text = "Sales Receipt", fontWeight = FontWeight.Bold, fontSize = 25.sp)
+                Text(text = "Date: ${sale.date}", fontSize = 18.sp)
+                Text(text = "Receipt no: ${sale.transactionId}", fontSize = 18.sp)
+                Spacer(modifier = Modifier.size(15.dp))
+                val tableHeaders = listOf("Name", "Quantity", "Price", "Total")
 
-    sale.items.forEach { productSale ->
-        val productRef = db.collection("Products").document(productSale.name)
+                Row {
+                    tableHeaders.forEachIndexed { index, header ->
+                        Text(
+                            text = header,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp),
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (index < tableHeaders.size - 1) {
+                            Spacer(modifier = Modifier.width(1.dp))
+                        }
+                    }
+                }
+                Divider(color = Color.Black, thickness = 1.dp)
 
-        // Fetch the current quantity
-        db.runTransaction { transaction ->
-            val snapshot = transaction.get(productRef)
-            val currentQuantity = snapshot.getLong("Quantity") ?: 0L
-            val newQuantity = currentQuantity - productSale.quantity
+                // Table rows
+                products.forEachIndexed { _, product ->
+                    Row(modifier = Modifier.padding(vertical = 8.dp)) {
+                        Text(
+                            text = product.name,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp)
+                        )
+                        Text(
+                            text = product.quantity.toString(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp)
+                        )
+                        Text(
+                            text = product.price.toString(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp)
+                        )
+                        Text(
+                            text = (product.price * product.quantity).toString(),
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(8.dp)
+                        )
+                    }
+                    Divider(color = Color.Gray, thickness = 0.5.dp)
+                }
 
-            // Update the quantity
-            transaction.update(productRef, "Quantity", newQuantity)
-        }.addOnSuccessListener {
-            Log.d("Firestore", "Product quantity successfully updated!")
-        }.addOnFailureListener { e ->
-            Log.w("Firestore", "Error updating product quantity", e)
+                // Subtotal and Payment Method
+                Row(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Spacer(modifier = Modifier.weight(2f))
+                    Text(
+                        text = "Subtotal: ",
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = subtotal.toString(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.size(16.dp))
+                Column(horizontalAlignment = AbsoluteAlignment.Left) {
+                    Text(
+                        text = "Payment Method: $paymentMethod",
+                        modifier = Modifier.padding(8.dp),
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.size(16.dp))
+                    Text(text = "Amount Paid: $")
+                    Text(text = "Change: $")
+                    Spacer(modifier = Modifier.size(10.dp))
+                    Text(text = "You were served by: ", fontSize = 11.sp)
+                }
+
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Close", color = colorResource(id = R.color.purple_200))
+                    }
+                    TextButton(onClick = {}) {
+                        Text("Generate", color = colorResource(id = R.color.purple_200))
+                    }
+                }
+            }
         }
     }
 }
+
+
+
+
 
 
 data class ProductSale2(

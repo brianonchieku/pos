@@ -50,6 +50,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -104,7 +105,9 @@ fun UsersScreen() {
             .fillMaxSize()
             .padding(paddingValues), contentAlignment = Alignment.Center){
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Row(modifier = Modifier.fillMaxWidth(). padding(end = 10.dp), horizontalArrangement = Arrangement.End) {
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 10.dp), horizontalArrangement = Arrangement.End) {
                     Button(onClick = { showDialog.value = true }, shape = RoundedCornerShape(15.dp)) {
                         Text(text = "Add User")
                     }
@@ -149,14 +152,24 @@ fun UserDetails(user: User) {
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(text = "Name: ${user.name}")
-            Text(text = "Email: ${user.email}")
-            Text(text = "Phone number: ${user.phone}")
-            Text(text = "Role: ${user.role}")
+        Row (modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically){
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(text = "Name: ${user.name}")
+                Text(text = "Email: ${user.email}")
+                Text(text = "Phone number: ${user.phone}")
+                Text(text = "Role: ${user.role}")
+            }
+            IconButton(onClick = { /*TODO*/ }) {
+                Icon(painter = painterResource(id = R.drawable.baseline_delete_24), contentDescription =null )
+
+            }
+
         }
+
     }
 }
 
@@ -275,10 +288,51 @@ suspend fun addUserToFirestore(user: User, context: Context) {
                 Toast.makeText(context, "Try Again: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
             }
         }
+}
 
 
 
+suspend fun deleteUserFromFirestore(userId: String, context: Context) {
+    val db = FirebaseFirestore.getInstance()
 
+    db.collection("Users").document(userId)
+        .delete()
+        .addOnSuccessListener {
+            Log.d("Firestore", "DocumentSnapshot successfully deleted!")
+            Toast.makeText(context, "Deleted successfully", Toast.LENGTH_SHORT).show()
+        }
+        .addOnFailureListener { e ->
+            Log.w("Firestore", "Error deleting document", e)
+            Toast.makeText(context, "Error deleting product: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+}
+
+@Composable
+fun ConfirmDeleteUserDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    Dialog(onDismissRequest = { onDismiss() }) {
+        Card(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = "Confirm Deletion", fontWeight = FontWeight.Bold)
+                Text(text = "Are you sure you want to delete this user?")
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(onClick = { onDismiss() }) {
+                        Text("Cancel")
+                    }
+                    TextButton(onClick = { onConfirm() }) {
+                        Text("Delete", color = Color.Red)
+                    }
+                }
+            }
+        }
+    }
 }
 
 data class User(
