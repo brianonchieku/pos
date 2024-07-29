@@ -129,6 +129,9 @@ fun Sales2(viewModel: SalesViewModel2) {
         )
         viewModel.submitSale(sale, context)
         showReceiptDialog = true
+
+        selectedProducts = listOf()
+        paymentMethod = ""
     }
 
     Box (modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
@@ -393,7 +396,10 @@ fun ProductTable2(
             }
         }
         Spacer(modifier = Modifier.size(20.dp))
-        Button(onClick = onProceedClick, modifier = Modifier
+        Button(onClick = {
+            onProceedClick()
+            onQuantityChange(ProductSale2("", 0.0, 0), 0)
+            onPaymentMethodChange("")}, modifier = Modifier
             .padding(vertical = 16.dp)) {
             Text(text = "Proceed")
         }
