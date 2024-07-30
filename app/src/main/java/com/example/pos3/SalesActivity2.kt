@@ -717,21 +717,9 @@ fun ReceiptDialog(
                 // Display QR Code
                 Spacer(modifier = Modifier.size(5.dp))
                 qrCodeBitmap?.let {
-                    Image(bitmap = it.asImageBitmap(), contentDescription = "QR Code", modifier = Modifier.size(300.dp))
+                    Image(bitmap = it.asImageBitmap(), contentDescription = "QR Code", modifier = Modifier.size(100.dp))
                 }
 
-                Spacer(modifier = Modifier.size(10.dp))
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text("Close", color = colorResource(id = R.color.purple_200))
-                    }
-                    TextButton(onClick = {}) {
-                        Text("Generate", color = colorResource(id = R.color.purple_500))
-                    }
-                }
                 Spacer(modifier = Modifier.size(10.dp))
                 Row(
                     horizontalArrangement = Arrangement.End,
