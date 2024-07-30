@@ -61,8 +61,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.breens.beetablescompose.BeeTablesCompose
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
@@ -74,15 +77,42 @@ class ProductsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-           Products()
+        val scope = CoroutineScope(Dispatchers.Main)
+        scope.launch {
+            val currentUserRole = getCurrentUserRole()
+            setContent {
+                Products(userRole = currentUserRole)
+            }
         }
+    }
+    private suspend fun getCurrentUserRole(): String {
+        val firebaseAuth = FirebaseAuth.getInstance()
+        val firestore = FirebaseFirestore.getInstance()
+
+        // Get the current logged-in user
+        val currentUser = firebaseAuth.currentUser
+        currentUser?.let {
+            val userId = it.uid
+            try {
+                // Fetch the user document from Firestore
+                val userDoc = firestore.collection("Users").document(userId).get().await()
+                if (userDoc.exists()) {
+                    // Get the role field from the user document
+                    val role = userDoc.getString("Role") ?: "unknown"
+                    return role
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        // Return a default role if something goes wrong
+        return "unknown"
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Products() {
+fun Products(userRole: String) {
     val products = remember { mutableStateOf<List<Product>>(emptyList()) }
     val scope = rememberCoroutineScope()
     val showDialog = remember { mutableStateOf(false) }
@@ -109,11 +139,13 @@ fun Products() {
             .fillMaxSize()
             .padding(paddingValues), contentAlignment = Alignment.Center){
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(end = 10.dp), horizontalArrangement = Arrangement.End) {
-                    Button(onClick = { showDialog.value = true }, shape = RoundedCornerShape(15.dp)) {
-                        Text(text = "Add Product")
+                if(userRole == "Admin"){
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(end = 10.dp), horizontalArrangement = Arrangement.End) {
+                        Button(onClick = { showDialog.value = true }, shape = RoundedCornerShape(15.dp)) {
+                            Text(text = "Add Product")
+                        }
                     }
                 }
                 if (showDialog.value) {
@@ -150,7 +182,7 @@ fun Products() {
                 ProductsTable(products = products.value, onEdit = { product ->
                     selectedProduct.value = product
                     showEditDialog.value = true
-                })
+                }, canEdit = userRole == "Admin")
 
             }
         }
@@ -158,7 +190,7 @@ fun Products() {
 }
 
 @Composable
-fun ProductsTable(products: List<Product>, onEdit: (Product) -> Unit) {
+fun ProductsTable(products: List<Product>, onEdit: (Product) -> Unit, canEdit: Boolean) {
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
 
     val productList = products.map { product ->
@@ -172,7 +204,12 @@ fun ProductsTable(products: List<Product>, onEdit: (Product) -> Unit) {
         )
     }
 
-    val tableHeaders = listOf("Name", "Category", "Price", "Quantity", "Updated on", "Expiry Date","Edit")
+    val tableHeaders = if (canEdit) {
+        listOf("Name", "Category", "Price", "Quantity", "Updated on", "Expiry Date", "Edit")
+    } else {
+        listOf("Name", "Category", "Price", "Quantity", "Updated on", "Expiry Date")
+    }
+
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(16.dp)) {
@@ -199,11 +236,13 @@ fun ProductsTable(products: List<Product>, onEdit: (Product) -> Unit) {
                         Spacer(modifier = Modifier.width(1.dp))
                     }
                 }
-                IconButton(onClick = {  onEdit(product) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(8.dp)) {
-                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit")
+                if (canEdit){
+                    IconButton(onClick = {  onEdit(product) },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(8.dp)) {
+                        Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit")
+                    }
                 }
             }
             Divider(color = Color.Gray, thickness = 0.5.dp)
@@ -610,5 +649,5 @@ data class Product(
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview6() {
-    Products()
+    //Products()
 }
