@@ -137,8 +137,8 @@ fun Cashier() {
                     // Handle the failure here if necessary
                 }
 
-            fetchCounts(db, itemCounts)
-            fetchSalesAmounts(db, salesAmounts)
+            fetchCountsCashier(db, itemCounts)
+            fetchSalesAmountsCashier(db, salesAmounts)
         }
     }
 
@@ -292,7 +292,7 @@ fun Cashier() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        Badge(count = itemCounts.value["expired"] ?: 0)
+                        BadgeCashier(count = itemCounts.value["expired"] ?: 0)
                     }
                     Column(
                         modifier = Modifier
@@ -312,7 +312,7 @@ fun Cashier() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        Badge(count = itemCounts.value["products"] ?: 0)
+                        BadgeCashier(count = itemCounts.value["products"] ?: 0)
 
                     }
 
@@ -341,7 +341,7 @@ fun Cashier() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        Badge(count = itemCounts.value["suppliers"] ?: 0)
+                        BadgeCashier(count = itemCounts.value["suppliers"] ?: 0)
 
                     }
                     Column(
@@ -362,7 +362,7 @@ fun Cashier() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        Badge(count = itemCounts.value["users"] ?: 0)
+                        BadgeCashier(count = itemCounts.value["users"] ?: 0)
 
                     }
                     Column(
@@ -492,7 +492,7 @@ fun Cashier() {
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        Badge(count = itemCounts.value["stores"] ?: 0)
+                        BadgeCashier(count = itemCounts.value["stores"] ?: 0)
                     }
 
                 }
