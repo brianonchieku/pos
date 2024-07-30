@@ -81,23 +81,24 @@ class CashierActivity : ComponentActivity() {
 @Composable
 fun Cashier() {
     val drawerItem = listOf(
-        DrawerItemss(Icons.Filled.Search, "barcode scanner", 2, true),
-        DrawerItemss(Icons.Filled.ShoppingCart, "products", 2, true),
-        DrawerItemss(Icons.Filled.Warning, "expired", 2, true),
-        DrawerItemss(Icons.Filled.MoreVert, "reports", 2, true),
-        DrawerItemss(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "logout", 2, true),
+        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_warehouse_24), contentDescription = null) }, "stores"),
+        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_person_24), contentDescription = null ) }, "users"),
+        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_people_24), contentDescription = null ) }, "suppliers"),
+        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_shopping_cart_24), contentDescription = null ) }, "products"),
+        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_shopping_cart_24), contentDescription = null ) }, "POS"),
+        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_file_copy_24), contentDescription = null ) }, "reports"),
+        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_warning_24), contentDescription = null ) }, "expired"),
+        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_arrow_back_ios_24), contentDescription = null ) }, "logout"),
     )
 
     val context = LocalContext.current
 
-    var selectedItem by remember{
-        mutableStateOf(drawerItem[0])
-    }
+    var selectedItem by remember{ mutableStateOf(drawerItem[0]) }
 
     val drawerState= rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val currentUser = FirebaseAuth.getInstance().currentUser
-    val userName = remember { mutableStateOf("Admin") }
+    val userName = remember { mutableStateOf("Cashier") }
 
     LaunchedEffect(currentUser) {
         currentUser?.let { user ->
@@ -135,18 +136,7 @@ fun Cashier() {
                             }
                         },
                         modifier = Modifier.padding(horizontal = 20.dp),
-                        icon = {
-                            Icon(imageVector = it.icon, contentDescription = it.text)
-                        },
-                        badge = {
-                            if(it.hasBadge){
-                                BadgedBox(badge = {}) {
-                                    Badge{
-                                        Text(text = it.badgeCount.toString())
-                                    }
-                                }
-                            }
-                        })
+                        icon = it.icon)
                 }
 
             }
@@ -183,10 +173,8 @@ fun Cashier() {
 }
 
 data class DrawerItemss(
-    val icon: ImageVector,
-    val text: String,
-    val badgeCount: Int,
-    val hasBadge: Boolean
+    val icon: @Composable () -> Unit,
+    val text: String
 )
 
 @Preview(showBackground = true)

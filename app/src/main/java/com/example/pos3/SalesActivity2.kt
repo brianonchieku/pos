@@ -180,7 +180,6 @@ fun Sales2(viewModel: SalesViewModel2) {
                 },
                 paymentMethod = paymentMethod
             )
-            // Add more UI elements here
         }
         if (showCashDialog) {
             CashDialog2(
@@ -399,7 +398,8 @@ fun ProductTable2(
         Button(onClick = {
             onProceedClick()
             onQuantityChange(ProductSale2("", 0.0, 0), 0)
-            onPaymentMethodChange("")}, modifier = Modifier
+            onPaymentMethodChange("")},
+            modifier = Modifier
             .padding(vertical = 16.dp)) {
             Text(text = "Proceed")
         }
@@ -737,8 +737,6 @@ data class Sale(
     val employeeName: String?,
     val status: String
 )
-
-
 
 @Preview(showBackground = true)
 @Composable
