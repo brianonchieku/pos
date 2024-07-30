@@ -87,7 +87,6 @@ fun Admin() {
         DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_person_24), contentDescription = null ) }, "users"),
         DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_people_24), contentDescription = null ) }, "suppliers"),
         DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_shopping_cart_24), contentDescription = null ) }, "products"),
-        DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_shopping_cart_24), contentDescription = null ) }, "POS"),
         DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_file_copy_24), contentDescription = null ) }, "reports"),
         DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_warning_24), contentDescription = null ) }, "expired"),
         DrawerItems({ Icon(painter = painterResource(id = R.drawable.baseline_arrow_back_ios_24), contentDescription = null ) }, "logout"),
@@ -160,7 +159,6 @@ fun Admin() {
                                 "users" -> context.startActivity(Intent(context, UsersActivity::class.java))
                                 "suppliers" -> context.startActivity(Intent(context, SupplierActivity::class.java))
                                 "products" -> context.startActivity(Intent(context, ProductsActivity::class.java))
-                                "POS" -> context.startActivity(Intent(context, SalesActivity2::class.java))
                                 "logout" -> {
                                     FirebaseAuth.getInstance().signOut()
                                     val intent = Intent(context, LoginActivity::class.java)

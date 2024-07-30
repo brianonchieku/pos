@@ -98,12 +98,8 @@ class CashierActivity : ComponentActivity() {
 @Composable
 fun Cashier() {
     val drawerItem = listOf(
-        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_warehouse_24), contentDescription = null) }, "stores"),
-        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_person_24), contentDescription = null ) }, "users"),
-        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_people_24), contentDescription = null ) }, "suppliers"),
-        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_shopping_cart_24), contentDescription = null ) }, "products"),
         DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_shopping_cart_24), contentDescription = null ) }, "POS"),
-        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_file_copy_24), contentDescription = null ) }, "reports"),
+        DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_shopping_cart_24), contentDescription = null ) }, "products"),
         DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_warning_24), contentDescription = null ) }, "expired"),
         DrawerItemss({ Icon(painter = painterResource(id = R.drawable.baseline_arrow_back_ios_24), contentDescription = null ) }, "logout"),
     )
@@ -167,8 +163,6 @@ fun Cashier() {
                                 drawerState.close()
                             }
                             when (it.text) {
-                                "users" -> context.startActivity(Intent(context, UsersActivity::class.java))
-                                "suppliers" -> context.startActivity(Intent(context, SupplierActivity::class.java))
                                 "products" -> context.startActivity(Intent(context, ProductsActivity::class.java))
                                 "POS" -> context.startActivity(Intent(context, SalesActivity2::class.java))
                                 "logout" -> {
