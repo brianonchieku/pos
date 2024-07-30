@@ -1,6 +1,7 @@
 package com.example.pos3
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
@@ -9,6 +10,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +57,7 @@ import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -72,6 +75,11 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.annotations.SerializedName
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.WriterException
+import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -85,6 +93,7 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.EnumMap
 import java.util.Locale
 import java.util.UUID
 
@@ -130,8 +139,6 @@ fun Sales2(viewModel: SalesViewModel2) {
         viewModel.submitSale(sale, context)
         showReceiptDialog = true
 
-        selectedProducts = listOf()
-        paymentMethod = ""
     }
 
     Box (modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
@@ -395,10 +402,7 @@ fun ProductTable2(
             }
         }
         Spacer(modifier = Modifier.size(20.dp))
-        Button(onClick = {
-            onProceedClick()
-            onQuantityChange(ProductSale2("", 0.0, 0), 0)
-            onPaymentMethodChange("")},
+        Button(onClick = onProceedClick,
             modifier = Modifier
             .padding(vertical = 16.dp)) {
             Text(text = "Proceed")
@@ -608,6 +612,16 @@ fun ReceiptDialog(
     amountReceived: Double,
     change: Double
 ) {
+    val qrCodeBitmap = remember {
+        val qrData = "Sale ID: ${sale.transactionId}\n" +
+                "Date: ${sale.date}\n" +
+                "Subtotal: $subtotal\n" +
+                "Payment Method: $paymentMethod\n" +
+                "Amount Paid: $amountReceived\n" +
+                "Change: $change"
+        generateQRCodeBitmap(qrData, 300)
+    }
+
     Dialog(onDismissRequest = {} ) {
         Card(
             modifier = Modifier.padding(16.dp)
@@ -699,6 +713,25 @@ fun ReceiptDialog(
                         )
                     }
                 }
+
+                // Display QR Code
+                Spacer(modifier = Modifier.size(5.dp))
+                qrCodeBitmap?.let {
+                    Image(bitmap = it.asImageBitmap(), contentDescription = "QR Code", modifier = Modifier.size(300.dp))
+                }
+
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Close", color = colorResource(id = R.color.purple_200))
+                    }
+                    TextButton(onClick = {}) {
+                        Text("Generate", color = colorResource(id = R.color.purple_500))
+                    }
+                }
                 Spacer(modifier = Modifier.size(10.dp))
                 Row(
                     horizontalArrangement = Arrangement.End,
@@ -713,6 +746,38 @@ fun ReceiptDialog(
                 }
             }
         }
+    }
+}
+
+fun generateQRCodeBitmap(data: String, size: Int): Bitmap? {
+    val hints = EnumMap<EncodeHintType, Any>(EncodeHintType::class.java).apply {
+        put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L)
+        put(EncodeHintType.MARGIN, 1)
+    }
+
+    val writer = QRCodeWriter()
+    return try {
+        val bitMatrix = writer.encode(data, BarcodeFormat.QR_CODE, size, size, hints)
+        val width = bitMatrix.width
+        val height = bitMatrix.height
+        val pixels = IntArray(width * height)
+
+        for (y in 0 until height) {
+            for (x in 0 until width) {
+                pixels[y * width + x] = if (bitMatrix[x, y]) {
+                    android.graphics.Color.BLACK
+                } else {
+                    android.graphics.Color.WHITE
+                }
+            }
+        }
+
+        Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply {
+            setPixels(pixels, 0, size, 0, 0, width, height)
+        }
+    } catch (e: WriterException) {
+        e.printStackTrace()
+        null
     }
 }
 

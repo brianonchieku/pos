@@ -80,4 +80,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
+
+    implementation(libs.core)
+    implementation(libs.zxing.android.embedded)
 }
