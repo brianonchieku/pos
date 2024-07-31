@@ -137,6 +137,7 @@ fun Sales2(viewModel: SalesViewModel2) {
             status = "completed"
         )
         viewModel.submitSale(sale, context)
+        viewModel.updateProductQuantities(selectedProducts)
         showReceiptDialog = true
 
     }
@@ -462,6 +463,24 @@ class SalesViewModel2 : ViewModel() {
                 val userSnapshot = db.collection("Users").document(userId).get().await()
                 val name = userSnapshot.getString("Name")
                 _employeeName.value = name
+            } catch (e: Exception) {
+                // Handle the error
+            }
+        }
+    }
+    fun updateProductQuantities(soldProducts: List<ProductSale2>) {
+        viewModelScope.launch {
+            val db = FirebaseFirestore.getInstance()
+
+            try {
+                soldProducts.forEach { product ->
+                    val productRef = db.collection("Products").whereEqualTo("Name", product.name).limit(1).get().await().documents.firstOrNull()?.reference
+                    productRef?.let {
+                        val newQuantity = (product.quantity - product.quantity)
+                        it.update("Quantity", newQuantity).await()
+                    }
+                }
+                fetchProducts() // Re-fetch products to update UI
             } catch (e: Exception) {
                 // Handle the error
             }
