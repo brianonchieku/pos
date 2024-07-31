@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,27 +26,37 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.pos3.ui.theme.Pos3Theme
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class NotificationActivity : ComponentActivity() {
+    private val notificationsViewModel: NotificationViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Notifications()
+            Notifications(notificationsViewModel)
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Notifications() {
+fun Notifications(viewModel: NotificationViewModel) {
+    val notifications by viewModel.notifications.collectAsState()
 
     Scaffold(topBar = {
         TopAppBar(title = { Text(text = "Notifications") },
@@ -60,9 +71,9 @@ fun Notifications() {
             .padding(paddingValues), contentAlignment = Alignment.Center) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxSize()
             ) {
-
+                NotificationsList(notifications = notifications)
             }
         }
 
@@ -92,9 +103,40 @@ fun NotificationDetails(notification: Notification) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(text = "Name: ${notification.timestamp}")
-            Text(text = "Email: ${notification.title}")
-            Text(text = "Phone number: ${notification.message}")
+            Text(text = "Time: ${notification.timestamp}")
+            Text(text = "Title: ${notification.title}")
+            Text(text = "Message: ${notification.message}")
+        }
+    }
+}
+
+class NotificationViewModel : ViewModel() {
+    private val _notifications = MutableStateFlow<List<Notification>>(emptyList())
+    val notifications: StateFlow<List<Notification>> = _notifications
+
+    init {
+        fetchNotifications()
+    }
+
+    private fun fetchNotifications() {
+        viewModelScope.launch {
+            val db = FirebaseFirestore.getInstance()
+            try {
+                db.collection("Notifications")
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null) {
+                            // Handle the error
+                            return@addSnapshotListener
+                        }
+                        val notificationList = snapshot?.documents?.mapNotNull {
+                            it.toObject(Notification::class.java)
+                        } ?: emptyList()
+                        _notifications.value = notificationList
+                    }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }
@@ -107,5 +149,5 @@ data class Notification(
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview8() {
-    Notifications()
+   // Notifications()
 }
