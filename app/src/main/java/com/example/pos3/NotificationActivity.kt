@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -103,9 +104,9 @@ fun NotificationDetails(notification: Notification) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(text = "Time: ${notification.timestamp}")
-            Text(text = "Title: ${notification.title}")
+            Text(text = "Title: ${notification.title}", fontWeight = FontWeight.Bold)
             Text(text = "Message: ${notification.message}")
+            Text(text = "Time: ${notification.timestamp}")
         }
     }
 }
