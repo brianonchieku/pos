@@ -11,4 +11,5 @@
     <string name="title_activity_sales">SalesActivity</string>
     <string name="title_activity_sales2">SalesActivity2</string>
     <string name="title_activity_mpesa">MpesaActivity</string>
+    <string name="title_activity_notification">NotificationActivity</string>
 </resources>

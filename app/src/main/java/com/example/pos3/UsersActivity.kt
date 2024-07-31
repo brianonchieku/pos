@@ -122,14 +122,10 @@ fun UsersScreen() {
                     }
                 }
                 UsersList(users = users.value)
-
             }
         }
     }
-
-
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UsersList(users: List<User>) {
@@ -142,7 +138,6 @@ fun UsersList(users: List<User>) {
             UserDetails(user = user)
         }
     }
-
 }
 
 @Composable
