@@ -188,6 +188,7 @@ fun Admin() {
                         Text(text = "Admin's Dashboard")
                         Spacer(modifier = Modifier.weight(1f))
                         Text(text = formattedDateTime, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Icon(painter = painterResource(id = R.drawable.baseline_notifications_24), contentDescription = null)
                     }
                 },
                 navigationIcon = {
