@@ -10,6 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -188,7 +189,12 @@ fun Admin() {
                         Text(text = "Admin's Dashboard")
                         Spacer(modifier = Modifier.weight(1f))
                         Text(text = formattedDateTime, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                        Icon(painter = painterResource(id = R.drawable.baseline_notifications_24), contentDescription = null)
+                        Icon(painter = painterResource(id = R.drawable.baseline_notifications_24), contentDescription = null,
+                            modifier = Modifier.clickable {
+                                val intent = Intent(context, NotificationActivity::class.java)
+                                context.startActivity(intent)
+
+                            })
                     }
                 },
                 navigationIcon = {

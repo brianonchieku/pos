@@ -72,6 +72,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.annotations.SerializedName
@@ -491,6 +492,7 @@ class SalesViewModel2 : ViewModel() {
                         } else {
                             // Delete the product from the database if the new quantity is zero or less
                             doc.reference.delete().await()
+                            addNotification(product.name)
                         }
                     }
                 }
@@ -501,8 +503,24 @@ class SalesViewModel2 : ViewModel() {
             }
         }
     }
-
-
+    private fun addNotification(productName: String) {
+        viewModelScope.launch {
+            val db = FirebaseFirestore.getInstance()
+            val notification = Notification(
+                title = "Product Out of Order",
+                message = "$productName is out of order.",
+                timestamp = Timestamp.now()
+            )
+            try {
+                db.collection("Notifications")
+                    .add(notification)
+                    .await()
+            } catch (e: Exception) {
+                // Handle the error
+                e.printStackTrace()
+            }
+        }
+    }
 }
 
 @Composable

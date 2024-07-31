@@ -139,22 +139,6 @@ class NotificationViewModel : ViewModel() {
             }
         }
     }
-    fun addNotification(title: String, message: String) {
-        viewModelScope.launch {
-            val db = FirebaseFirestore.getInstance()
-            val newNotification = Notification(
-                title = title,
-                message = message,
-                timestamp = Timestamp.now()
-            )
-            try {
-                db.collection("Notifications")
-                    .add(newNotification)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
 }
 
 data class Notification(
