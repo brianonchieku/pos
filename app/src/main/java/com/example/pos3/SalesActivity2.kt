@@ -485,8 +485,13 @@ class SalesViewModel2 : ViewModel() {
                         // Calculate the new quantity
                         val newQuantity = currentQuantity - product.quantity
 
-                        // Update the quantity in the database
-                        doc.reference.update("Quantity", newQuantity).await()
+                        if (newQuantity > 0) {
+                            // Update the quantity in the database if it's more than zero
+                            doc.reference.update("Quantity", newQuantity).await()
+                        } else {
+                            // Delete the product from the database if the new quantity is zero or less
+                            doc.reference.delete().await()
+                        }
                     }
                 }
                 fetchProducts() // Re-fetch products to update UI
