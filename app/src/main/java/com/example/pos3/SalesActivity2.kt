@@ -474,18 +474,30 @@ class SalesViewModel2 : ViewModel() {
 
             try {
                 soldProducts.forEach { product ->
-                    val productRef = db.collection("Products").whereEqualTo("Name", product.name).limit(1).get().await().documents.firstOrNull()?.reference
-                    productRef?.let {
-                        val newQuantity = (product.quantity - product.quantity)
-                        it.update("Quantity", newQuantity).await()
+                    // Find the product reference based on its name
+                    val productQuery = db.collection("Products").whereEqualTo("Name", product.name).limit(1).get().await()
+                    val productDoc = productQuery.documents.firstOrNull()
+
+                    productDoc?.let { doc ->
+                        // Fetch the current quantity from the document
+                        val currentQuantity = doc.getLong("Quantity") ?: 0L
+
+                        // Calculate the new quantity
+                        val newQuantity = currentQuantity - product.quantity
+
+                        // Update the quantity in the database
+                        doc.reference.update("Quantity", newQuantity).await()
                     }
                 }
                 fetchProducts() // Re-fetch products to update UI
             } catch (e: Exception) {
-                // Handle the error
+                // Handle the error (log it or show a message to the user)
+                e.printStackTrace()
             }
         }
     }
+
+
 }
 
 @Composable
